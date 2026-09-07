@@ -119,3 +119,6 @@ Next: run /create-spec for the next feature
   "GitHub MCP is not connected. Run /mcp to check connection."
 - If push fails due to no upstream, use git push -u origin CURRENT_BRANCH
 - Never proceed to merge if PR creation fails
+
+
+
