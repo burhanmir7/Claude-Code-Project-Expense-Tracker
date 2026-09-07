@@ -58,6 +58,7 @@ Read these files before writing the spec:
 - `CLAUDE.md` — roadmap, conventions, schema
 - `app.py` — existing routes and structure
 - `database/db.py` — existing schema and functions
+- `database/queries.py` — existing query helpers and their return shapes
 - All files in `.claude/specs/` — avoid duplicating existing specs
 
 Check `CLAUDE.md` to confirm the requested step is not already
@@ -107,6 +108,18 @@ Specific constraints Claude must follow. Always include:
 - Passwords hashed with werkzeug
 - Use CSS variables — never hardcode hex values
 - All templates extend `base.html`
+
+## Tests to write
+File: `tests/test_<feature_slug>.py`
+
+### Unit tests
+| Function | Input | Expected output |
+|---|---|---|
+| one row per helper/behaviour | concrete input values | concrete expected result |
+
+### Route tests
+`METHOD /path` — condition (e.g. unauthenticated / authenticated, valid data):
+- Expected status code and what the body or DB should show
 
 ## Definition of done
 A specific testable checklist. Each item must be
