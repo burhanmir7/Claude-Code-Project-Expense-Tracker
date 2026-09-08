@@ -1,4 +1,9 @@
+import pytest
+
 from database.queries import delete_chat_messages, get_chat_messages, insert_chat_message
+
+from ai import llm_client
+from ai.llm_client import AIConfigError
 
 
 # ------------------------------------------------------------------ #
@@ -62,6 +67,29 @@ def test_delete_chat_messages_scoped_to_user(client):
     assert deleted == 2
     assert get_chat_messages(1) == []
     assert len(get_chat_messages(other_user_id)) == 1
+
+
+# ------------------------------------------------------------------ #
+# ai/llm_client.py                                                    #
+# ------------------------------------------------------------------ #
+
+def test_get_client_raises_when_key_unset(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    llm_client._client = None
+
+    with pytest.raises(AIConfigError) as exc_info:
+        llm_client.get_client()
+
+    assert exc_info.value.status == 503
+    assert "LLM_API_KEY" in exc_info.value.user_message
+
+
+def test_create_message_raises_when_key_unset(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    llm_client._client = None
+
+    with pytest.raises(AIConfigError):
+        llm_client.create_message(system_text="You are a test assistant.", turns=[])
 
 
 # ------------------------------------------------------------------ #
