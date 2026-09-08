@@ -1,0 +1,28 @@
+<aside id="chat-drawer" class="chat-drawer chat-drawer-collapsed"
+       data-history-url="{{ url_for('chat_history') }}"
+       data-send-url="{{ url_for('chat_send') }}">
+    <button id="chat-toggle" class="chat-toggle" type="button" aria-expanded="false">
+        <span class="chat-toggle-icon">◈</span>
+    </button>
+
+    <div class="chat-panel">
+        <div class="chat-header">
+            <span class="chat-title">Spendly Assistant</span>
+            <div class="chat-header-actions">
+                <button id="chat-clear" class="chat-clear" type="button">Clear</button>
+                <button id="chat-close" class="chat-close" type="button" aria-label="Close chat">&times;</button>
+            </div>
+        </div>
+
+        <div id="chat-messages" class="chat-messages" aria-live="polite">
+            <p class="chat-empty">Ask me about your spending.</p>
+        </div>
+
+        <p id="chat-status" class="chat-status" hidden></p>
+
+        <form id="chat-form" class="chat-form">
+            <textarea id="chat-input" class="chat-input" maxlength="2000" rows="1" placeholder="Ask about your spending..."></textarea>
+            <button type="submit" class="chat-send">Send</button>
+        </form>
+    </div>
+</aside>

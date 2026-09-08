@@ -373,3 +373,26 @@ def test_chat_clear_deletes_rows(client):
     assert response.status_code == 200
     assert response.get_json() == {"cleared": 3}
     assert get_chat_messages(1) == []
+
+
+# ------------------------------------------------------------------ #
+# Task 5: Chat drawer UI                                             #
+# ------------------------------------------------------------------ #
+
+def test_profile_includes_chat_drawer_when_logged_in(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/profile")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="chat-drawer"' in body
+    assert "js/chat.js" in body
+
+
+def test_landing_excludes_chat_drawer_when_logged_out(client):
+    response = client.get("/")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "chat-drawer" not in body
