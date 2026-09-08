@@ -1,9 +1,15 @@
+from datetime import date
+from types import SimpleNamespace
+
 import pytest
 
 from database.queries import delete_chat_messages, get_chat_messages, insert_chat_message
 
 from ai import llm_client
-from ai.llm_client import AIConfigError
+from ai.chat import build_messages, build_turn_context, run_chat_turn
+from ai.llm_client import AIConfigError, AIRateLimitError, AIUnavailableError
+from ai.prompts import CHAT_SYSTEM_PROMPT
+from tests.conftest import text_reply
 
 
 # ------------------------------------------------------------------ #
@@ -92,34 +98,30 @@ def test_create_message_raises_when_key_unset(monkeypatch):
         llm_client.create_message(system_text="You are a test assistant.", turns=[])
 
 
-def test_map_finish_reason_max_tokens_is_length():
-    from google.genai import types
+def _candidate(reason):
+    return SimpleNamespace(finish_reason=SimpleNamespace(name=reason))
 
-    candidate = types.Candidate.model_validate({"finishReason": "MAX_TOKENS"})
+
+def test_map_finish_reason_max_tokens_is_length():
+    candidate = _candidate("MAX_TOKENS")
 
     assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "length"
 
 
 def test_map_finish_reason_stop_is_stop():
-    from google.genai import types
-
-    candidate = types.Candidate.model_validate({"finishReason": "STOP"})
+    candidate = _candidate("STOP")
 
     assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "stop"
 
 
 def test_map_finish_reason_safety_is_refused():
-    from google.genai import types
-
-    candidate = types.Candidate.model_validate({"finishReason": "SAFETY"})
+    candidate = _candidate("SAFETY")
 
     assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "refused"
 
 
 def test_map_finish_reason_tool_calls_takes_priority():
-    from google.genai import types
-
-    candidate = types.Candidate.model_validate({"finishReason": "STOP"})
+    candidate = _candidate("STOP")
 
     assert llm_client._map_finish_reason(candidate, has_tool_calls=True) == "tool_calls"
 
@@ -150,13 +152,6 @@ def new_user_id_for(client):
 # ------------------------------------------------------------------ #
 # ai/chat.py — build_messages                                        #
 # ------------------------------------------------------------------ #
-
-from datetime import date
-
-from ai.chat import build_messages, build_turn_context, run_chat_turn
-from ai.prompts import CHAT_SYSTEM_PROMPT
-from tests.conftest import text_reply
-
 
 def test_build_messages_trims_to_history_limit():
     history = [
@@ -237,10 +232,6 @@ def test_run_chat_turn_empty_text_reply(fake_llm):
     assert result["reply"] == "Done."
 
 
-from ai.llm_client import AIRateLimitError, AIUnavailableError
-from tests.conftest import text_reply
-
-
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
@@ -307,6 +298,37 @@ def test_chat_send_too_long_message(client):
     response = client.post("/api/chat", json={"message": "x" * 2001})
 
     assert response.status_code == 400
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_at_max_length_succeeds(client, fake_llm):
+    fake_llm.responses.append(text_reply("Sure"))
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "x" * 2000})
+
+    assert response.status_code == 200
+
+
+def test_chat_send_non_string_message(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": 123})
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Message is required."
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_json_array_body(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json=[1, 2])
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Message is required."
     from database.queries import get_chat_messages
     assert get_chat_messages(1) == []
 

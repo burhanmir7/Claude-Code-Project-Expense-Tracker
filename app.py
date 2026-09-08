@@ -363,10 +363,13 @@ def chat_send():
         return _json_error("Authentication required.", 401)
 
     body = request.get_json(silent=True)
-    if not body:
+    if not isinstance(body, dict):
         return _json_error("Message is required.", 400)
 
-    text = (body.get("message") or "").strip()
+    message = body.get("message")
+    if not isinstance(message, str):
+        return _json_error("Message is required.", 400)
+    text = message.strip()
     if not text:
         return _json_error("Message is required.", 400)
     if len(text) > CHAT_MESSAGE_MAX_LENGTH:
