@@ -145,3 +145,93 @@ def new_user_id_for(client):
     from database.db import get_user_by_email
 
     return get_user_by_email("new@example.com")["id"]
+
+
+# ------------------------------------------------------------------ #
+# ai/chat.py — build_messages                                        #
+# ------------------------------------------------------------------ #
+
+from datetime import date
+
+from ai.chat import build_messages, build_turn_context, run_chat_turn
+from ai.prompts import CHAT_SYSTEM_PROMPT
+from tests.conftest import text_reply
+
+
+def test_build_messages_trims_to_history_limit():
+    history = [
+        {"role": "assistant" if i % 2 == 0 else "user", "content": "msg%d" % i}
+        for i in range(25)
+    ]
+
+    turns = build_messages(history, "new question")
+
+    assert len(turns) == 21
+    assert turns[0]["role"] == "user"
+    assert turns[-1] == {"role": "user", "content": "new question"}
+
+
+def test_build_messages_drops_leading_assistant_row():
+    history = [
+        {"role": "assistant" if i % 2 == 0 else "user", "content": "msg%d" % i}
+        for i in range(20)
+    ]
+
+    turns = build_messages(history, "new question")
+
+    assert turns[0]["role"] == "user"
+
+
+# ------------------------------------------------------------------ #
+# ai/chat.py — build_turn_context                                    #
+# ------------------------------------------------------------------ #
+
+def test_build_turn_context_includes_date_and_name():
+    context = build_turn_context(user_id=1, user_name="Demo User", today=date(2026, 9, 7))
+
+    assert "Today is 2026-09-07." in context
+    assert "Demo User" in context
+
+
+# ------------------------------------------------------------------ #
+# ai/chat.py — run_chat_turn                                         #
+# ------------------------------------------------------------------ #
+
+def test_run_chat_turn_returns_reply_text(fake_llm):
+    fake_llm.responses.append(text_reply("Hello"))
+    history = [
+        {"role": "user" if i % 2 == 0 else "assistant", "content": "msg%d" % i}
+        for i in range(30)
+    ]
+
+    result = run_chat_turn(1, history, "hi", "Demo User", date(2026, 9, 7))
+
+    assert result == {"reply": "Hello", "tools_used": []}
+    call = fake_llm.calls[0]
+    assert call["system_text"] == CHAT_SYSTEM_PROMPT
+    assert "Today is" in call["context_text"]
+    assert len(call["turns"]) == 21
+
+
+def test_run_chat_turn_refused_reply(fake_llm):
+    fake_llm.responses.append(text_reply("", finish_reason="refused"))
+
+    result = run_chat_turn(1, [], "hi", "Demo User", date(2026, 9, 7))
+
+    assert result["reply"] == "I can't help with that request."
+
+
+def test_run_chat_turn_length_reply(fake_llm):
+    fake_llm.responses.append(text_reply("partial answer", finish_reason="length"))
+
+    result = run_chat_turn(1, [], "hi", "Demo User", date(2026, 9, 7))
+
+    assert result["reply"] == "partial answer …"
+
+
+def test_run_chat_turn_empty_text_reply(fake_llm):
+    fake_llm.responses.append(text_reply(""))
+
+    result = run_chat_turn(1, [], "hi", "Demo User", date(2026, 9, 7))
+
+    assert result["reply"] == "Done."
