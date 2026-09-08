@@ -93,7 +93,8 @@ def _build_tools(tools):
 def _map_finish_reason(candidate, has_tool_calls):
     if has_tool_calls:
         return "tool_calls"
-    reason = str(getattr(candidate, "finish_reason", "") or "")
+    finish_reason = getattr(candidate, "finish_reason", None)
+    reason = getattr(finish_reason, "name", finish_reason) or ""
     if reason == "MAX_TOKENS":
         return "length"
     if reason in ("SAFETY", "RECITATION", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"):
