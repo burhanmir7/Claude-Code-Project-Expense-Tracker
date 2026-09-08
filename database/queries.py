@@ -158,3 +158,45 @@ def delete_expense_by_id(expense_id, user_id):
         return cursor.rowcount
     finally:
         conn.close()
+
+
+def get_chat_messages(user_id, limit=None):
+    conn = get_db()
+    try:
+        query = "SELECT id, role, content, created_at FROM chat_messages WHERE user_id = ? ORDER BY id DESC"
+        params = [user_id]
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        rows = conn.execute(query, params).fetchall()
+    finally:
+        conn.close()
+
+    rows = list(reversed(rows))
+    return [
+        {"id": row["id"], "role": row["role"], "content": row["content"], "created_at": row["created_at"]}
+        for row in rows
+    ]
+
+
+def insert_chat_message(user_id, role, content):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO chat_messages (user_id, role, content) VALUES (?, ?, ?)",
+            (user_id, role, content),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
+def delete_chat_messages(user_id):
+    conn = get_db()
+    try:
+        cursor = conn.execute("DELETE FROM chat_messages WHERE user_id = ?", (user_id,))
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
