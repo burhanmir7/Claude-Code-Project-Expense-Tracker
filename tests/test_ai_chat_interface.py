@@ -235,3 +235,141 @@ def test_run_chat_turn_empty_text_reply(fake_llm):
     result = run_chat_turn(1, [], "hi", "Demo User", date(2026, 9, 7))
 
     assert result["reply"] == "Done."
+
+
+from ai.llm_client import AIRateLimitError, AIUnavailableError
+from tests.conftest import text_reply
+
+
+# ------------------------------------------------------------------ #
+# Routes                                                              #
+# ------------------------------------------------------------------ #
+
+def test_chat_history_requires_auth(client):
+    response = client.get("/api/chat/history")
+
+    assert response.status_code == 401
+    assert "error" in response.get_json()
+
+
+def test_chat_history_returns_stored_messages(client, monkeypatch):
+    from database.queries import insert_chat_message
+
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    insert_chat_message(1, "user", "hi")
+    insert_chat_message(1, "assistant", "hello")
+
+    response = client.get("/api/chat/history")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert len(body["messages"]) == 2
+    assert body["messages"][0]["role"] == "user"
+    assert body["messages"][1]["role"] == "assistant"
+
+
+def test_chat_send_requires_auth(client):
+    response = client.post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 401
+
+
+def test_chat_send_success_stores_both_turns(client, fake_llm):
+    from database.queries import get_chat_messages
+
+    fake_llm.responses.append(text_reply("Sure"))
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 200
+    assert response.get_json() == {"reply": "Sure"}
+
+    rows = get_chat_messages(1)
+    assert [r["role"] for r in rows] == ["user", "assistant"]
+    assert rows[0]["content"] == "hi"
+    assert rows[1]["content"] == "Sure"
+
+
+def test_chat_send_blank_message(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "   "})
+
+    assert response.status_code == 400
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_too_long_message(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "x" * 2001})
+
+    assert response.status_code == 400
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_non_json_body(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", data="not json", content_type="text/plain")
+
+    assert response.status_code == 400
+
+
+def test_chat_send_no_api_key_configured(client, monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    from ai import llm_client
+    llm_client._client = None
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 503
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_unavailable_error(client, fake_llm):
+    fake_llm.responses.append(AIUnavailableError("The assistant is temporarily unavailable. Please try again."))
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 502
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_send_rate_limit_error(client, fake_llm):
+    fake_llm.responses.append(AIRateLimitError("The assistant is busy. Please try again in a moment."))
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 429
+    from database.queries import get_chat_messages
+    assert get_chat_messages(1) == []
+
+
+def test_chat_clear_requires_auth(client):
+    response = client.delete("/api/chat/history")
+
+    assert response.status_code == 401
+
+
+def test_chat_clear_deletes_rows(client):
+    from database.queries import insert_chat_message, get_chat_messages
+
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    insert_chat_message(1, "user", "a")
+    insert_chat_message(1, "assistant", "b")
+    insert_chat_message(1, "user", "c")
+
+    response = client.delete("/api/chat/history")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"cleared": 3}
+    assert get_chat_messages(1) == []

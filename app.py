@@ -2,17 +2,22 @@ import calendar
 import sqlite3
 from datetime import date, datetime
 
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
+from ai import llm_client
+from ai.chat import HISTORY_LIMIT, run_chat_turn
 from database.db import CATEGORIES, create_user, get_user_by_email, init_db, seed_db
 from database.queries import (
+    delete_chat_messages,
     delete_expense_by_id,
     get_category_breakdown,
+    get_chat_messages,
     get_expense_by_id,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
+    insert_chat_message,
     insert_expense,
     update_expense,
 )
@@ -51,6 +56,10 @@ def _match_preset(date_from, date_to, preset_ranges):
         (name for name, (f, t) in preset_ranges.items() if (date_from, date_to) == (f, t)),
         None,
     )
+
+
+def _json_error(message, status):
+    return jsonify({"error": message}), status
 
 
 # ------------------------------------------------------------------ #
@@ -327,6 +336,64 @@ def delete_expense(id):
 
     flash("Expense deleted successfully.", "success")
     return redirect(url_for("profile"))
+
+
+# ------------------------------------------------------------------ #
+# AI routes                                                           #
+# ------------------------------------------------------------------ #
+
+CHAT_HISTORY_LIMIT = 50
+CHAT_MESSAGE_MAX_LENGTH = 2000
+
+
+@app.route("/api/chat/history", methods=["GET"])
+def chat_history():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    messages = get_chat_messages(user_id, limit=CHAT_HISTORY_LIMIT)
+    return jsonify({"messages": messages})
+
+
+@app.route("/api/chat", methods=["POST"])
+def chat_send():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    body = request.get_json(silent=True)
+    if not body:
+        return _json_error("Message is required.", 400)
+
+    text = (body.get("message") or "").strip()
+    if not text:
+        return _json_error("Message is required.", 400)
+    if len(text) > CHAT_MESSAGE_MAX_LENGTH:
+        return _json_error("Message must be 2000 characters or fewer.", 400)
+
+    history = get_chat_messages(user_id, limit=HISTORY_LIMIT)
+    user = get_user_by_id(user_id)
+
+    try:
+        result = run_chat_turn(user_id, history, text, user["name"], date.today())
+    except llm_client.AIError as e:
+        return _json_error(e.user_message, e.status)
+
+    insert_chat_message(user_id, "user", text)
+    insert_chat_message(user_id, "assistant", result["reply"])
+
+    return jsonify({"reply": result["reply"]})
+
+
+@app.route("/api/chat/history", methods=["DELETE"])
+def chat_clear():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    cleared = delete_chat_messages(user_id)
+    return jsonify({"cleared": cleared})
 
 
 with app.app_context():
