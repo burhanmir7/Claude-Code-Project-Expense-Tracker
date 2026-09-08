@@ -63,7 +63,7 @@ spendly/
 - **Flask only** — no FastAPI, no Django, no other web frameworks
 - **SQLite only** — no PostgreSQL, no SQLAlchemy ORM, no external DB
 - **Vanilla JS only** — no React, no jQuery, no npm packages
-- **No new pip packages** — work within `requirements.txt` as-is. The single sanctioned exception is one LLM SDK package for the AI layer (Step 10) — the provider is chosen at implementation time, not decided by these docs; pin its version and name it here once chosen. Anything else must be flagged and approved first
+- **No new pip packages** — work within `requirements.txt` as-is. The single sanctioned exception is `google-genai` (pinned in `requirements.txt`), used only by `ai/llm_client.py` for the Gemini free-tier API. Anything else must be flagged and approved first
 - Python 3.10+ assumed — f-strings and `match` statements are fine (the project venv is 3.14, so `imghdr` and other 3.13-removed modules are unavailable)
 
 ---
@@ -132,9 +132,9 @@ pytest -s
 | `GET, POST /expenses/add` | Implemented — Step 7 |
 | `GET, POST /expenses/<int:id>/edit` | Implemented — Step 8 |
 | `POST /expenses/<int:id>/delete` | Implemented — Step 9 |
-| `GET /api/chat/history` | Stub — Step 10 |
-| `POST /api/chat` | Stub — Step 10 |
-| `DELETE /api/chat/history` | Stub — Step 10 |
+| `GET /api/chat/history` | Implemented — Step 10 |
+| `POST /api/chat` | Implemented — Step 10 |
+| `DELETE /api/chat/history` | Implemented — Step 10 |
 | `POST /expenses/scan` | Stub — Step 12 |
 | `GET /accounts` | Stub — Step 14 |
 | `GET, POST /accounts/add` | Stub — Step 14 |
