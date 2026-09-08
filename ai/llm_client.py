@@ -5,7 +5,7 @@ import os
 from google import genai
 from google.genai import errors, types
 
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-3.6-flash"
 CHAT_MAX_TOKENS = 4096
 EXTRACT_MAX_TOKENS = 1024
 REQUEST_TIMEOUT_SECONDS = 30.0
