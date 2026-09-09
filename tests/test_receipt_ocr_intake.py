@@ -221,3 +221,19 @@ def test_scan_receipt_no_api_key_configured(client, monkeypatch):
 
     assert response.status_code == 503
     assert "not configured" in response.get_data(as_text=True)
+
+
+# ------------------------------------------------------------------ #
+# GET /expenses/add (UI)                                              #
+# ------------------------------------------------------------------ #
+
+def test_add_expense_page_includes_receipt_dropzone(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/expenses/add")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="receipt-form"' in body
+    assert 'id="receipt-dropzone"' in body
+    assert "js/receipt.js" in body
