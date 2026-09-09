@@ -270,42 +270,6 @@ def add_expense():
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/scan", methods=["POST"])
-def scan_receipt():
-    if not session.get("user_id"):
-        return redirect(url_for("login"))
-
-    today = date.today()
-
-    def rerender(message, status):
-        flash(message, "error")
-        return render_template("add_expense.html", categories=CATEGORIES, today=today.isoformat()), status
-
-    file = request.files.get("receipt")
-    if not file or not file.filename:
-        return rerender("Please choose a receipt image.", 400)
-
-    data = file.read()
-    if len(data) > MAX_RECEIPT_BYTES:
-        return rerender("Receipt image must be 5 MB or smaller.", 400)
-
-    media_type = detect_image_type(data)
-    if media_type is None:
-        return rerender("Please upload a PNG, JPEG, WebP or GIF image.", 400)
-
-    try:
-        result = extract_receipt(data, media_type, today)
-    except llm_client.AIError as e:
-        return rerender(e.user_message, e.status)
-
-    if not result.get("is_receipt"):
-        return rerender("That image doesn't look like a receipt.", 400)
-
-    fields = normalise_receipt(result, today)
-    flash("Receipt read — please check the details before saving.", "success")
-    return render_template("add_expense.html", categories=CATEGORIES, today=today.isoformat(), **fields)
-
-
 @app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
     if not session.get("user_id"):
