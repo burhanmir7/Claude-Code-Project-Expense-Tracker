@@ -15,6 +15,7 @@
 </head>
 <body>
 
+    {% if not hide_chrome %}
     <nav class="navbar">
         <div class="nav-inner">
             <a href="{{ url_for('landing') }}" class="nav-brand">
@@ -48,6 +49,7 @@
             </div>
         </div>
     </nav>
+    {% endif %}
 
     <div class="app-shell">
         <main class="main-content">
@@ -68,6 +70,7 @@
         {% endif %}
     </div>
 
+    {% if not hide_chrome %}
     <footer class="footer">
         <div class="footer-inner">
             <span class="brand-icon">◈</span>
@@ -77,6 +80,7 @@
             <a href="{{ url_for('privacy') }}">Privacy Policy</a>
         </div>
     </footer>
+    {% endif %}
 
     {% if session.get('user_id') %}
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>

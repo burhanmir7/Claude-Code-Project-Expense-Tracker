@@ -1,4 +1,5 @@
 import calendar
+import math
 import sqlite3
 from datetime import date, datetime
 
@@ -15,6 +16,7 @@ from database.queries import (
     get_category_breakdown,
     get_chat_messages,
     get_expense_by_id,
+    get_monthly_totals,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
@@ -204,20 +206,19 @@ def profile():
         for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)
     ]
 
-    categories = [
-        {
-            "name": c["name"],
-            "total": f"₹{c['amount']:,.2f}",
-            "percent": min(100, max(10, round(c["pct"] / 10) * 10)),
-        }
-        for c in get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
-    ]
+    month_start = today.replace(day=1).isoformat()
+    monthly_expenses_total = get_summary_stats(user_id, date_from=month_start, date_to=today.isoformat())["total_spent"]
+    monthly_expenses = f"₹{monthly_expenses_total:,.2f}"
+    monthly_totals = get_monthly_totals(user_id)
+    category_breakdown = get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
 
     return render_template(
         "profile.html", user=user, stats=stats,
-        transactions=transactions, categories=categories,
+        transactions=transactions,
         selected_from=date_from, selected_to=date_to,
         active_preset=active_preset, preset_ranges=preset_ranges,
+        monthly_expenses=monthly_expenses, monthly_totals=monthly_totals,
+        category_breakdown=category_breakdown, hide_chrome=True,
     )
 
 
@@ -268,42 +269,6 @@ def add_expense():
 
     flash("Expense added successfully.", "success")
     return redirect(url_for("profile"))
-
-
-@app.route("/expenses/scan", methods=["POST"])
-def scan_receipt():
-    if not session.get("user_id"):
-        return redirect(url_for("login"))
-
-    today = date.today()
-
-    def rerender(message, status):
-        flash(message, "error")
-        return render_template("add_expense.html", categories=CATEGORIES, today=today.isoformat()), status
-
-    file = request.files.get("receipt")
-    if not file or not file.filename:
-        return rerender("Please choose a receipt image.", 400)
-
-    data = file.read()
-    if len(data) > MAX_RECEIPT_BYTES:
-        return rerender("Receipt image must be 5 MB or smaller.", 400)
-
-    media_type = detect_image_type(data)
-    if media_type is None:
-        return rerender("Please upload a PNG, JPEG, WebP or GIF image.", 400)
-
-    try:
-        result = extract_receipt(data, media_type, today)
-    except llm_client.AIError as e:
-        return rerender(e.user_message, e.status)
-
-    if not result.get("is_receipt"):
-        return rerender("That image doesn't look like a receipt.", 400)
-
-    fields = normalise_receipt(result, today)
-    flash("Receipt read — please check the details before saving.", "success")
-    return render_template("add_expense.html", categories=CATEGORIES, today=today.isoformat(), **fields)
 
 
 @app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
@@ -438,6 +403,86 @@ def chat_clear():
 
     cleared = delete_chat_messages(user_id)
     return jsonify({"cleared": cleared})
+
+
+@app.route("/api/chat/receipt", methods=["POST"])
+def chat_scan_receipt():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    today = date.today()
+
+    file = request.files.get("receipt")
+    if not file or not file.filename:
+        return _json_error("Please choose a receipt image.", 400)
+
+    data = file.read()
+    if len(data) > MAX_RECEIPT_BYTES:
+        return _json_error("Receipt image must be 5 MB or smaller.", 400)
+
+    media_type = detect_image_type(data)
+    if media_type is None:
+        return _json_error("Please upload a PNG, JPEG, WebP or GIF image.", 400)
+
+    try:
+        result = extract_receipt(data, media_type, today)
+    except llm_client.AIError as e:
+        return _json_error(e.user_message, e.status)
+
+    if not result.get("is_receipt"):
+        return _json_error("That image doesn't look like a receipt.", 400)
+
+    fields = normalise_receipt(result, today)
+    reply = "I found a %s expense of ₹%s from %s. Want me to save it?" % (
+        fields["category"], fields["amount"], fields["date"],
+    )
+
+    insert_chat_message(user_id, "user", "📎 " + file.filename)
+    insert_chat_message(user_id, "assistant", reply)
+
+    return jsonify({"reply": reply, "expense": fields})
+
+
+@app.route("/api/expenses", methods=["POST"])
+def api_add_expense():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return _json_error("Amount, category, and date are required.", 400)
+
+    amount = (body.get("amount") or "").strip() if isinstance(body.get("amount"), str) else ""
+    category = (body.get("category") or "").strip() if isinstance(body.get("category"), str) else ""
+    date_str = (body.get("date") or "").strip() if isinstance(body.get("date"), str) else ""
+    description = (body.get("description") or "").strip() if isinstance(body.get("description"), str) else ""
+
+    if not amount or not category or not date_str:
+        return _json_error("Amount, category, and date are required.", 400)
+
+    try:
+        amount_value = float(amount)
+    except ValueError:
+        return _json_error("Amount must be a valid number.", 400)
+
+    if not math.isfinite(amount_value) or amount_value <= 0:
+        return _json_error("Amount must be greater than zero.", 400)
+
+    if category not in CATEGORIES:
+        return _json_error("Please select a valid category.", 400)
+
+    parsed_date = _parse_date(date_str)
+    if not parsed_date:
+        return _json_error("Please enter a valid date.", 400)
+
+    if len(description) > 200:
+        return _json_error("Description must be 200 characters or fewer.", 400)
+
+    insert_expense(user_id, amount_value, category, parsed_date.isoformat(), description or None)
+
+    return jsonify({"success": True})
 
 
 with app.app_context():

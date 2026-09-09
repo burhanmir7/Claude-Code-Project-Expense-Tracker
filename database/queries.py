@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from database.db import get_db
 
@@ -200,3 +200,30 @@ def delete_chat_messages(user_id):
         return cursor.rowcount
     finally:
         conn.close()
+
+
+def get_monthly_totals(user_id, months=6):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT strftime('%Y-%m', date) AS ym, SUM(amount) AS total "
+            "FROM expenses WHERE user_id = ? GROUP BY ym",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    totals_by_month = {row["ym"]: row["total"] for row in rows}
+
+    today = date.today()
+    year, month = today.year, today.month
+    buckets = []
+    for _ in range(months):
+        buckets.append("%04d-%02d" % (year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    buckets.reverse()
+
+    return [{"month": ym, "total": totals_by_month.get(ym, 0)} for ym in buckets]

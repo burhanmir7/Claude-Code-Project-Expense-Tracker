@@ -27,10 +27,10 @@ spendly/
 ├── static/
 │   ├── css/
 │   │   ├── style.css       # Global styles
-│   │   └── <page>.css      # One file per page/feature (profile, chat, receipt, accounts)
+│   │   └── <page>.css      # One file per page/feature (profile, chat, accounts)
 │   └── js/
 │       ├── main.js         # Site-wide (theme toggle) — vanilla JS only
-│       └── <feature>.js    # chat.js (drawer), receipt.js (dropzone)
+│       └── <feature>.js    # chat.js (drawer + receipt attach), dashboard.js (charts)
 ├── tests/              # pytest; conftest.py holds the client fixture + FakeLLM
 ├── PLAN_AI.md          # AI roadmap checklist (Steps 10–14)
 └── requirements.txt
@@ -135,7 +135,8 @@ pytest -s
 | `GET /api/chat/history` | Implemented — Step 10 |
 | `POST /api/chat` | Implemented — Step 10 |
 | `DELETE /api/chat/history` | Implemented — Step 10 |
-| `POST /expenses/scan` | Implemented — Step 12 |
+| `POST /api/chat/receipt` | Implemented — dashboard redesign |
+| `POST /api/expenses` | Implemented — dashboard redesign |
 | `GET /accounts` | Stub — Step 14 |
 | `GET, POST /accounts/add` | Stub — Step 14 |
 | `GET, POST /accounts/<int:id>/edit` | Stub — Step 14 |

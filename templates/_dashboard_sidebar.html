@@ -1,0 +1,37 @@
+<aside class="profile-sidebar">
+    <div class="profile-sidebar-brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">Spendly</span>
+    </div>
+
+    <div class="profile-sidebar-section">
+        <p class="profile-sidebar-heading">General</p>
+        <a href="{{ url_for('profile') }}" class="profile-sidebar-link profile-sidebar-link-active">Dashboard</a>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">All Expenses <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Bills &amp; Subscriptions <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Investment <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Cards <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Goals <span class="profile-sidebar-soon">Soon</span></span>
+    </div>
+
+    <div class="profile-sidebar-section">
+        <p class="profile-sidebar-heading">Tools</p>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Insight <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Analytics <span class="profile-sidebar-soon">Soon</span></span>
+    </div>
+
+    <div class="profile-sidebar-section">
+        <p class="profile-sidebar-heading">Other</p>
+        <a href="{{ url_for('add_expense') }}" class="profile-sidebar-link">Add Expense</a>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Settings <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Help Center <span class="profile-sidebar-soon">Soon</span></span>
+        <span class="profile-sidebar-link profile-sidebar-link-soon" aria-disabled="true">Support <span class="profile-sidebar-soon">Soon</span></span>
+        <button id="theme-toggle" class="profile-sidebar-link profile-sidebar-theme-toggle" type="button" aria-label="Toggle dark mode">Toggle theme</button>
+        <a href="{{ url_for('logout') }}" class="profile-sidebar-link">Sign out</a>
+    </div>
+
+    <div class="profile-sidebar-upgrade" aria-disabled="true">
+        <p class="profile-sidebar-upgrade-title">Upgrade to PRO</p>
+        <p class="profile-sidebar-soon">Soon</p>
+    </div>
+</aside>

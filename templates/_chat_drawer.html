@@ -4,7 +4,9 @@
 
 <aside id="chat-drawer" class="chat-drawer chat-drawer-collapsed"
        data-history-url="{{ url_for('chat_history') }}"
-       data-send-url="{{ url_for('chat_send') }}">
+       data-send-url="{{ url_for('chat_send') }}"
+       data-receipt-url="{{ url_for('chat_scan_receipt') }}"
+       data-expenses-url="{{ url_for('api_add_expense') }}">
     <div class="chat-panel">
         <div class="chat-header">
             <span class="chat-title">Spendly Assistant</span>
@@ -21,6 +23,8 @@
         <p id="chat-status" class="chat-status" hidden></p>
 
         <form id="chat-form" class="chat-form">
+            <input type="file" id="chat-attach-input" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
+            <button type="button" id="chat-attach-button" class="chat-attach" aria-label="Attach a receipt image">📎</button>
             <textarea id="chat-input" class="chat-input" maxlength="2000" rows="1" placeholder="Ask about your spending..."></textarea>
             <button type="submit" class="chat-send">Send</button>
         </form>
