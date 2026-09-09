@@ -5,7 +5,8 @@ import os
 from google import genai
 from google.genai import errors, types
 
-MODEL = "gemini-3.6-flash"
+CHAT_MODEL = "gemini-flash-lite-latest"
+EXTRACTION_MODEL = "gemini-flash-latest"
 CHAT_MAX_TOKENS = 4096
 EXTRACT_MAX_TOKENS = 1024
 REQUEST_TIMEOUT_SECONDS = 30.0
@@ -110,6 +111,8 @@ def create_message(system_text, context_text="", turns=None, tools=None, respons
     if context_text:
         system_instruction = system_text + "\n\n" + context_text
 
+    model = EXTRACTION_MODEL if response_schema else CHAT_MODEL
+
     config_kwargs = {
         "system_instruction": system_instruction,
         "max_output_tokens": EXTRACT_MAX_TOKENS if response_schema else CHAT_MAX_TOKENS,
@@ -125,7 +128,7 @@ def create_message(system_text, context_text="", turns=None, tools=None, respons
 
     try:
         response = client.models.generate_content(
-            model=MODEL,
+            model=model,
             contents=_build_contents(turns, image),
             config=types.GenerateContentConfig(**config_kwargs),
         )
