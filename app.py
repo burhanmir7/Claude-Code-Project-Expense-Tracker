@@ -440,6 +440,86 @@ def chat_clear():
     return jsonify({"cleared": cleared})
 
 
+@app.route("/api/chat/receipt", methods=["POST"])
+def chat_scan_receipt():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    today = date.today()
+
+    file = request.files.get("receipt")
+    if not file or not file.filename:
+        return _json_error("Please choose a receipt image.", 400)
+
+    data = file.read()
+    if len(data) > MAX_RECEIPT_BYTES:
+        return _json_error("Receipt image must be 5 MB or smaller.", 400)
+
+    media_type = detect_image_type(data)
+    if media_type is None:
+        return _json_error("Please upload a PNG, JPEG, WebP or GIF image.", 400)
+
+    try:
+        result = extract_receipt(data, media_type, today)
+    except llm_client.AIError as e:
+        return _json_error(e.user_message, e.status)
+
+    if not result.get("is_receipt"):
+        return _json_error("That image doesn't look like a receipt.", 400)
+
+    fields = normalise_receipt(result, today)
+    reply = "I found a %s expense of ₹%s from %s. Want me to save it?" % (
+        fields["category"], fields["amount"], fields["date"],
+    )
+
+    insert_chat_message(user_id, "user", "📎 " + file.filename)
+    insert_chat_message(user_id, "assistant", reply)
+
+    return jsonify({"reply": reply, "expense": fields})
+
+
+@app.route("/api/expenses", methods=["POST"])
+def api_add_expense():
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return _json_error("Amount, category, and date are required.", 400)
+
+    amount = (body.get("amount") or "").strip() if isinstance(body.get("amount"), str) else ""
+    category = (body.get("category") or "").strip() if isinstance(body.get("category"), str) else ""
+    date_str = (body.get("date") or "").strip() if isinstance(body.get("date"), str) else ""
+    description = (body.get("description") or "").strip() if isinstance(body.get("description"), str) else ""
+
+    if not amount or not category or not date_str:
+        return _json_error("Amount, category, and date are required.", 400)
+
+    try:
+        amount_value = float(amount)
+    except ValueError:
+        return _json_error("Amount must be a valid number.", 400)
+
+    if amount_value <= 0:
+        return _json_error("Amount must be greater than zero.", 400)
+
+    if category not in CATEGORIES:
+        return _json_error("Please select a valid category.", 400)
+
+    parsed_date = _parse_date(date_str)
+    if not parsed_date:
+        return _json_error("Please enter a valid date.", 400)
+
+    if len(description) > 200:
+        return _json_error("Description must be 200 characters or fewer.", 400)
+
+    insert_expense(user_id, amount_value, category, parsed_date.isoformat(), description or None)
+
+    return jsonify({"success": True})
+
+
 with app.app_context():
     init_db()
     seed_db()
