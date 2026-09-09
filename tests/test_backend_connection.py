@@ -185,3 +185,19 @@ def new_user_id_for(client):
     from database.db import get_user_by_email
 
     return get_user_by_email("new@example.com")["id"]
+
+
+def test_login_page_still_shows_navbar(client):
+    response = client.get("/login")
+    body = response.get_data(as_text=True)
+
+    assert 'class="navbar"' in body
+
+
+def test_profile_page_hides_top_navbar(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/profile")
+    body = response.get_data(as_text=True)
+
+    assert 'class="navbar"' not in body
