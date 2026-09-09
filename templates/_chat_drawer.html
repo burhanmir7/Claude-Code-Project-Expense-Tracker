@@ -4,7 +4,9 @@
 
 <aside id="chat-drawer" class="chat-drawer chat-drawer-collapsed"
        data-history-url="{{ url_for('chat_history') }}"
-       data-send-url="{{ url_for('chat_send') }}">
+       data-send-url="{{ url_for('chat_send') }}"
+       data-receipt-url="{{ url_for('chat_scan_receipt') }}"
+       data-expenses-url="{{ url_for('api_add_expense') }}">
     <div class="chat-panel">
         <div class="chat-header">
             <span class="chat-title">Spendly Assistant</span>

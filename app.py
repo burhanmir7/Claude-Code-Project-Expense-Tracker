@@ -1,4 +1,5 @@
 import calendar
+import math
 import sqlite3
 from datetime import date, datetime
 
@@ -205,15 +206,6 @@ def profile():
         for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)
     ]
 
-    categories = [
-        {
-            "name": c["name"],
-            "total": f"₹{c['amount']:,.2f}",
-            "percent": min(100, max(10, round(c["pct"] / 10) * 10)),
-        }
-        for c in get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
-    ]
-
     month_start = today.replace(day=1).isoformat()
     monthly_expenses_total = get_summary_stats(user_id, date_from=month_start, date_to=today.isoformat())["total_spent"]
     monthly_expenses = f"₹{monthly_expenses_total:,.2f}"
@@ -222,7 +214,7 @@ def profile():
 
     return render_template(
         "profile.html", user=user, stats=stats,
-        transactions=transactions, categories=categories,
+        transactions=transactions,
         selected_from=date_from, selected_to=date_to,
         active_preset=active_preset, preset_ranges=preset_ranges,
         monthly_expenses=monthly_expenses, monthly_totals=monthly_totals,
@@ -475,7 +467,7 @@ def api_add_expense():
     except ValueError:
         return _json_error("Amount must be a valid number.", 400)
 
-    if amount_value <= 0:
+    if not math.isfinite(amount_value) or amount_value <= 0:
         return _json_error("Amount must be greater than zero.", 400)
 
     if category not in CATEGORIES:

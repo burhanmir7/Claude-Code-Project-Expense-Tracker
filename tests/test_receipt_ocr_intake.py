@@ -236,6 +236,14 @@ def test_api_add_expense_invalid_amount_returns_400(client):
     assert response.status_code == 400
 
 
+def test_api_add_expense_non_finite_amount_returns_400(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    for bad_amount in ("nan", "inf", "-inf"):
+        response = client.post("/api/expenses", json={"amount": bad_amount, "date": "2026-09-01", "description": "x", "category": "Food"})
+        assert response.status_code == 400, f"amount={bad_amount!r} should be rejected"
+
+
 def test_api_add_expense_invalid_category_returns_400(client):
     client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
 

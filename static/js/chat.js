@@ -23,6 +23,8 @@
 
     var historyUrl = drawer.getAttribute("data-history-url");
     var sendUrl = drawer.getAttribute("data-send-url");
+    var receiptUrl = drawer.getAttribute("data-receipt-url");
+    var expensesUrl = drawer.getAttribute("data-expenses-url");
 
     function setOpen(isOpen) {
         if (isOpen) {
@@ -119,7 +121,7 @@
             saveButton.disabled = true;
             saveButton.textContent = "Saving…";
 
-            fetch("/api/expenses", {
+            fetch(saveUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(expense)
@@ -159,7 +161,7 @@
         var formData = new FormData();
         formData.append("receipt", file);
 
-        fetch("/api/chat/receipt", {
+        fetch(receiptUrl, {
             method: "POST",
             body: formData
         })
@@ -172,7 +174,7 @@
                 setInputDisabled(false);
                 setStatus("");
                 if (result.ok) {
-                    appendReceiptCard(result.data.reply, result.data.expense);
+                    appendReceiptCard(result.data.reply, result.data.expense, expensesUrl);
                 } else {
                     appendBubble("error", result.data.error || "Something went wrong.");
                 }
