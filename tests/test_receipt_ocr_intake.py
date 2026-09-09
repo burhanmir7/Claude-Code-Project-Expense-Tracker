@@ -209,7 +209,7 @@ def test_scan_receipt_not_a_receipt(client, fake_llm):
     response = _upload(client, PNG_BYTES)
 
     assert response.status_code == 400
-    assert "doesn't look like a receipt" in response.get_data(as_text=True)
+    assert "doesn&#39;t look like a receipt" in response.get_data(as_text=True)
 
 
 def test_scan_receipt_no_api_key_configured(client, monkeypatch):

@@ -3,7 +3,6 @@ import sqlite3
 from datetime import date, datetime
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
-from markupsafe import Markup
 from werkzeug.security import check_password_hash
 
 from ai import llm_client
@@ -276,10 +275,7 @@ def scan_receipt():
     today = date.today()
 
     def rerender(message, status):
-        # These messages are always hardcoded, server-side strings (never
-        # user input), so marking them safe avoids HTML-entity-escaping
-        # apostrophes (e.g. "doesn't") without any XSS risk.
-        flash(Markup(message), "error")
+        flash(message, "error")
         return render_template("add_expense.html", categories=CATEGORIES, today=today.isoformat()), status
 
     file = request.files.get("receipt")
