@@ -1,5 +1,9 @@
+import base64
+import json
 from datetime import datetime
 
+from ai import llm_client
+from ai.prompts import RECEIPT_PROMPT
 from database.db import CATEGORIES
 
 ALLOWED_MEDIA_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
@@ -61,3 +65,22 @@ def normalise_receipt(fields, today):
         "date": date_str,
         "description": description,
     }
+
+
+def extract_receipt(image_bytes, media_type, today):
+    b64 = base64.standard_b64encode(image_bytes).decode("ascii")
+
+    reply = llm_client.create_message(
+        system_text=RECEIPT_PROMPT,
+        turns=[{"role": "user", "content": "Today is %s. Extract the receipt fields." % today.isoformat()}],
+        image={"media_type": media_type, "data": b64},
+        response_schema=RECEIPT_SCHEMA,
+    )
+
+    if reply.finish_reason == "refused":
+        raise llm_client.AIUnavailableError("The assistant is temporarily unavailable. Please try again.")
+
+    try:
+        return json.loads(reply.text)
+    except (ValueError, TypeError):
+        raise llm_client.AIUnavailableError("The assistant is temporarily unavailable. Please try again.")

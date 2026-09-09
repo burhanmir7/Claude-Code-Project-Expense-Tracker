@@ -112,7 +112,7 @@ def create_message(system_text, context_text="", turns=None, tools=None, respons
 
     config_kwargs = {
         "system_instruction": system_instruction,
-        "max_output_tokens": CHAT_MAX_TOKENS,
+        "max_output_tokens": EXTRACT_MAX_TOKENS if response_schema else CHAT_MAX_TOKENS,
     }
 
     tool_config = _build_tools(tools)

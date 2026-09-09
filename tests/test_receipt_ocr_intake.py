@@ -82,3 +82,45 @@ def test_receipt_schema_category_enum_matches_categories():
     assert RECEIPT_SCHEMA["properties"]["category"]["enum"] == CATEGORIES
     assert RECEIPT_SCHEMA["additionalProperties"] is False
     assert set(RECEIPT_SCHEMA["required"]) == {"is_receipt", "amount", "date", "description", "category"}
+
+
+import json
+
+import pytest
+
+from ai import llm_client
+from ai.prompts import RECEIPT_PROMPT
+from ai.receipts import RECEIPT_SCHEMA, extract_receipt
+from tests.conftest import text_reply
+
+
+# ------------------------------------------------------------------ #
+# extract_receipt                                                     #
+# ------------------------------------------------------------------ #
+
+def test_extract_receipt_returns_parsed_json(fake_llm):
+    payload = {"is_receipt": True, "amount": 249.5, "date": "2026-09-01", "description": "Lunch", "category": "Food"}
+    fake_llm.responses.append(text_reply(json.dumps(payload)))
+
+    result = extract_receipt(b"\x89PNG\r\n\x1a\n" + b"rest", "image/png", date(2026, 9, 1))
+
+    assert result == payload
+    call = fake_llm.calls[0]
+    assert call["response_schema"] is RECEIPT_SCHEMA
+    assert call["image"]["media_type"] == "image/png"
+    assert call["system_text"] == RECEIPT_PROMPT
+    assert "2026-09-01" in call["turns"][0]["content"]
+
+
+def test_extract_receipt_raises_on_non_json_text(fake_llm):
+    fake_llm.responses.append(text_reply("this is not json"))
+
+    with pytest.raises(llm_client.AIUnavailableError):
+        extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
+
+
+def test_extract_receipt_raises_on_refused(fake_llm):
+    fake_llm.responses.append(text_reply("", finish_reason="refused"))
+
+    with pytest.raises(llm_client.AIUnavailableError):
+        extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
