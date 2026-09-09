@@ -1,5 +1,8 @@
+from datetime import date
+
 from database.queries import (
     get_category_breakdown,
+    get_monthly_totals,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
@@ -123,6 +126,55 @@ def test_profile_new_user_empty_state(client):
 
     assert response.status_code == 200
     assert "₹0.00" in body
+
+
+# ------------------------------------------------------------------ #
+# get_monthly_totals                                                   #
+# ------------------------------------------------------------------ #
+
+def test_get_monthly_totals_returns_six_contiguous_months(client):
+    from database.db import get_db
+
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+        (1, 100.0, "Food", "2026-07-15", "test"),
+    )
+    conn.commit()
+    conn.close()
+
+    result = get_monthly_totals(1, months=6)
+
+    assert len(result) == 6
+    months = [row["month"] for row in result]
+    assert months == sorted(months)
+    for row in result:
+        assert set(row.keys()) == {"month", "total"}
+
+
+def test_get_monthly_totals_zero_fills_months_with_no_expenses(client):
+    result = get_monthly_totals(999999, months=6)
+
+    assert len(result) == 6
+    assert all(row["total"] == 0 for row in result)
+
+
+def test_get_monthly_totals_scoped_to_user(client):
+    from database.db import get_db
+
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+        (1, 500.0, "Food", date.today().isoformat(), "mine"),
+    )
+    conn.commit()
+    conn.close()
+
+    mine = get_monthly_totals(1, months=1)
+    other = get_monthly_totals(999999, months=1)
+
+    assert mine[0]["total"] >= 500.0
+    assert other[0]["total"] == 0
 
 
 # ------------------------------------------------------------------ #
