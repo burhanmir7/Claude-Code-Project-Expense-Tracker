@@ -35,13 +35,6 @@
     gap: 1.5rem;
 }
 
-.profile-columns {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1rem;
-    align-items: start;
-}
-
 .profile-card {
     background: var(--paper-card);
     border: 1px solid var(--border);
@@ -393,12 +386,6 @@
 /* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
-
-@media (max-width: 900px) {
-    .profile-columns {
-        grid-template-columns: 1fr;
-    }
-}
 
 @media (max-width: 768px) {
     .profile-stats {
