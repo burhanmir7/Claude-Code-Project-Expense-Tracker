@@ -72,12 +72,12 @@
             <div class="profile-chart-card">
                 <h2 class="profile-card-title">Monthly spending</h2>
                 <p class="profile-chart-subtitle">{{ stats[1].value }} transactions this range</p>
-                <canvas id="monthly-chart" data-monthly="{{ monthly_totals | tojson }}"></canvas>
+                <canvas id="monthly-chart" data-monthly="{{ monthly_totals | tojson | forceescape }}"></canvas>
             </div>
             <div class="profile-chart-card">
                 <h2 class="profile-card-title">Category breakdown</h2>
                 <p class="profile-chart-subtitle">Top: {{ stats[2].value }}</p>
-                <canvas id="category-chart" data-categories="{{ category_breakdown | tojson }}"></canvas>
+                <canvas id="category-chart" data-categories="{{ category_breakdown | tojson | forceescape }}"></canvas>
             </div>
         </div>
 
