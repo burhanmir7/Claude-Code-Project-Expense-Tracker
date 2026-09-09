@@ -124,3 +124,100 @@ def test_extract_receipt_raises_on_refused(fake_llm):
 
     with pytest.raises(llm_client.AIUnavailableError):
         extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
+
+
+import io
+
+from database.queries import get_summary_stats
+
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"0" * 32
+PDF_BYTES = b"%PDF-1.4" + b"0" * 32
+
+
+def _upload(client, data, filename="receipt.png"):
+    return client.post(
+        "/expenses/scan",
+        data={"receipt": (io.BytesIO(data), filename)},
+        content_type="multipart/form-data",
+    )
+
+
+# ------------------------------------------------------------------ #
+# POST /expenses/scan                                                  #
+# ------------------------------------------------------------------ #
+
+def test_scan_receipt_requires_auth(client):
+    response = _upload(client, PNG_BYTES)
+
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+
+
+def test_scan_receipt_success(client, fake_llm):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    before_count = get_summary_stats(1)["transaction_count"]
+    payload = {"is_receipt": True, "amount": 249.5, "date": "2026-09-01", "description": "Lunch", "category": "Food"}
+    fake_llm.responses.append(text_reply(json.dumps(payload)))
+
+    response = _upload(client, PNG_BYTES)
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'value="249.50"' in body
+    assert 'value="2026-09-01"' in body
+    assert "Lunch" in body
+    assert 'value="Food" selected>' in body
+    assert "Receipt read" in body
+    assert get_summary_stats(1)["transaction_count"] == before_count
+
+
+def test_scan_receipt_no_file(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.post("/expenses/scan", data={}, content_type="multipart/form-data")
+
+    assert response.status_code == 400
+    assert "Please choose a receipt image." in response.get_data(as_text=True)
+
+
+def test_scan_receipt_wrong_type(client, fake_llm):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = _upload(client, PDF_BYTES, filename="receipt.png")
+
+    assert response.status_code == 400
+    assert "PNG, JPEG, WebP or GIF" in response.get_data(as_text=True)
+    assert fake_llm.calls == []
+
+
+def test_scan_receipt_too_large(client, fake_llm):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    oversized = b"\x89PNG\r\n\x1a\n" + b"0" * (5 * 1024 * 1024 + 1)
+
+    response = _upload(client, oversized)
+
+    assert response.status_code == 400
+    assert "5 MB or smaller" in response.get_data(as_text=True)
+    assert fake_llm.calls == []
+
+
+def test_scan_receipt_not_a_receipt(client, fake_llm):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    payload = {"is_receipt": False, "amount": None, "date": None, "description": None, "category": "Other"}
+    fake_llm.responses.append(text_reply(json.dumps(payload)))
+
+    response = _upload(client, PNG_BYTES)
+
+    assert response.status_code == 400
+    assert "doesn't look like a receipt" in response.get_data(as_text=True)
+
+
+def test_scan_receipt_no_api_key_configured(client, monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    llm_client._client = None
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = _upload(client, PNG_BYTES)
+
+    assert response.status_code == 503
+    assert "not configured" in response.get_data(as_text=True)
