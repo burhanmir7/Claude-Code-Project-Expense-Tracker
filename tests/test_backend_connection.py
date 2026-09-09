@@ -80,6 +80,22 @@ def test_get_category_breakdown_empty(client):
 # Route tests                                                         #
 # ------------------------------------------------------------------ #
 
+def test_landing_unauthenticated_shows_landing_page(client):
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Sign in" in response.get_data(as_text=True)
+
+
+def test_landing_authenticated_redirects_to_profile(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/")
+
+    assert response.status_code == 302
+    assert "/profile" in response.headers["Location"]
+
+
 def test_profile_unauthenticated_redirects(client):
     response = client.get("/profile")
     assert response.status_code == 302
