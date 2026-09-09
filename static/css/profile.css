@@ -298,6 +298,15 @@
     cursor: pointer;
 }
 
+.profile-chat-quickstart-attach {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--paper-card);
+    color: var(--ink);
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
 /* ------------------------------------------------------------------ */
 /* Filter bar                                                          */
 /* ------------------------------------------------------------------ */
