@@ -135,7 +135,7 @@ pytest -s
 | `GET /api/chat/history` | Implemented — Step 10 |
 | `POST /api/chat` | Implemented — Step 10 |
 | `DELETE /api/chat/history` | Implemented — Step 10 |
-| `POST /expenses/scan` | Stub — Step 12 |
+| `POST /expenses/scan` | Implemented — Step 12 |
 | `GET /accounts` | Stub — Step 14 |
 | `GET, POST /accounts/add` | Stub — Step 14 |
 | `GET, POST /accounts/<int:id>/edit` | Stub — Step 14 |

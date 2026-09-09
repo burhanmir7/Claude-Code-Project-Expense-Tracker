@@ -2,6 +2,10 @@
 
 {% block title %}Add Expense — Spendly{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <section class="auth-section">
@@ -10,6 +14,17 @@
         <div class="auth-header">
             <h1 class="auth-title">Add Expense</h1>
             <p class="auth-subtitle">Log a new transaction to keep your spending on track.</p>
+        </div>
+
+        <div class="auth-card receipt-card">
+            <form id="receipt-form" method="POST" action="{{ url_for('scan_receipt') }}" enctype="multipart/form-data">
+                <label class="receipt-dropzone" id="receipt-dropzone" for="receipt">Drop a receipt image here or click to choose</label>
+                <input type="file" id="receipt" name="receipt"
+                       accept="image/png,image/jpeg,image/webp,image/gif"
+                       class="receipt-input" required>
+                <span id="receipt-filename" class="receipt-filename"></span>
+                <button type="submit" class="btn-submit receipt-submit">Scan receipt</button>
+            </form>
         </div>
 
         <div class="auth-card">
@@ -51,4 +66,8 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/receipt.js') }}"></script>
 {% endblock %}
