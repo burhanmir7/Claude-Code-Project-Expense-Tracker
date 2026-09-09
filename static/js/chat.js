@@ -14,6 +14,9 @@
     var formEl = document.getElementById("chat-form");
     var inputEl = document.getElementById("chat-input");
 
+    var quickstartForm = document.getElementById("profile-chat-quickstart-form");
+    var quickstartInput = document.getElementById("profile-chat-quickstart-input");
+
     var historyUrl = drawer.getAttribute("data-history-url");
     var sendUrl = drawer.getAttribute("data-send-url");
 
@@ -213,6 +216,22 @@
                 event.preventDefault();
                 trySend();
             }
+        });
+    }
+
+    if (quickstartForm) {
+        quickstartForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            if (!quickstartInput) {
+                return;
+            }
+            var text = quickstartInput.value.trim();
+            if (!text) {
+                return;
+            }
+            quickstartInput.value = "";
+            setOpen(true);
+            sendMessage(text);
         });
     }
 

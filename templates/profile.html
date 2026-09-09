@@ -21,6 +21,12 @@
             <a href="{{ url_for('add_expense') }}" class="btn-primary">Add Expense</a>
         </div>
 
+        <form id="profile-chat-quickstart-form" class="profile-chat-quickstart">
+            <input type="text" id="profile-chat-quickstart-input" class="profile-chat-quickstart-input"
+                   placeholder="Ask about your spending..." autocomplete="off">
+            <button type="submit" class="profile-chat-quickstart-send">Send</button>
+        </form>
+
         <div class="profile-filterbar">
             <div class="profile-filter-presets">
                 <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1]) }}"

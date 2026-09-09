@@ -334,6 +334,39 @@
 .width-100 { width: 100%; }
 
 /* ------------------------------------------------------------------ */
+/* Chat quickstart                                                     */
+/* ------------------------------------------------------------------ */
+
+.profile-chat-quickstart {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.profile-chat-quickstart-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
+}
+
+.profile-chat-quickstart-send {
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--font-body);
+    cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ */
 /* Filter bar                                                          */
 /* ------------------------------------------------------------------ */
 

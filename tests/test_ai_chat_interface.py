@@ -412,6 +412,17 @@ def test_profile_includes_chat_drawer_when_logged_in(client):
     assert "js/chat.js" in body
 
 
+def test_profile_includes_chat_quickstart_field_when_logged_in(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/profile")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="profile-chat-quickstart-form"' in body
+    assert 'id="profile-chat-quickstart-input"' in body
+
+
 def test_landing_excludes_chat_drawer_when_logged_out(client):
     response = client.get("/")
     body = response.get_data(as_text=True)

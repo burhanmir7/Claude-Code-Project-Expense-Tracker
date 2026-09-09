@@ -1,12 +1,20 @@
-.chat-drawer {
+.app-shell {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.app-shell > .main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chat-toggle {
     position: fixed;
     right: 24px;
     bottom: 24px;
     z-index: 1000;
-    font-family: var(--font-body);
-}
-
-.chat-toggle {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -17,21 +25,29 @@
     cursor: pointer;
 }
 
+.chat-drawer {
+    flex: 0 0 auto;
+    width: 380px;
+    max-width: 380px;
+    overflow: hidden;
+    font-family: var(--font-body);
+    transition: width 0.25s ease, max-width 0.25s ease;
+}
+
+.chat-drawer-collapsed {
+    width: 0;
+    max-width: 0;
+}
+
 .chat-panel {
     display: flex;
     flex-direction: column;
-    width: 360px;
-    max-width: 360px;
+    width: 380px;
     max-height: 70vh;
     background: var(--paper-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    margin-bottom: 12px;
+    border-radius: var(--radius-md);
     overflow: hidden;
-}
-
-.chat-drawer-collapsed .chat-panel {
-    display: none;
 }
 
 .chat-header {
@@ -132,15 +148,24 @@
     cursor: pointer;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
     .chat-drawer {
-        right: 12px;
-        left: 12px;
-        bottom: 12px;
+        width: 100%;
+        max-width: 100%;
+        max-height: 60vh;
+        transition: max-height 0.25s ease;
+    }
+
+    .chat-drawer-collapsed {
+        max-height: 0;
     }
 
     .chat-panel {
         width: 100%;
-        max-width: 100%;
+        max-height: none;
     }
 }
