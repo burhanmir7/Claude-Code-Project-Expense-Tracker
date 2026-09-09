@@ -19,6 +19,11 @@
     color: var(--ink);
 }
 
+#receipt-form:focus-within .receipt-dropzone {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
 .receipt-input {
     position: absolute;
     width: 1px;

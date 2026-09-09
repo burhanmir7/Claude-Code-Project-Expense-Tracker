@@ -1,6 +1,14 @@
+import io
+import json
 from datetime import date
 
-from ai.receipts import RECEIPT_SCHEMA, detect_image_type, normalise_receipt
+import pytest
+
+from ai import llm_client
+from ai.prompts import RECEIPT_PROMPT
+from ai.receipts import RECEIPT_SCHEMA, detect_image_type, extract_receipt, normalise_receipt
+from database.queries import get_summary_stats
+from tests.conftest import text_reply
 
 
 # ------------------------------------------------------------------ #
@@ -84,16 +92,6 @@ def test_receipt_schema_category_enum_matches_categories():
     assert set(RECEIPT_SCHEMA["required"]) == {"is_receipt", "amount", "date", "description", "category"}
 
 
-import json
-
-import pytest
-
-from ai import llm_client
-from ai.prompts import RECEIPT_PROMPT
-from ai.receipts import RECEIPT_SCHEMA, extract_receipt
-from tests.conftest import text_reply
-
-
 # ------------------------------------------------------------------ #
 # extract_receipt                                                     #
 # ------------------------------------------------------------------ #
@@ -119,16 +117,19 @@ def test_extract_receipt_raises_on_non_json_text(fake_llm):
         extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
 
 
+def test_extract_receipt_raises_on_non_object_json_text(fake_llm):
+    fake_llm.responses.append(text_reply("[1, 2, 3]"))
+
+    with pytest.raises(llm_client.AIUnavailableError):
+        extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
+
+
 def test_extract_receipt_raises_on_refused(fake_llm):
     fake_llm.responses.append(text_reply("", finish_reason="refused"))
 
     with pytest.raises(llm_client.AIUnavailableError):
         extract_receipt(b"\x89PNG\r\n\x1a\n", "image/png", date(2026, 9, 1))
 
-
-import io
-
-from database.queries import get_summary_stats
 
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"0" * 32
 PDF_BYTES = b"%PDF-1.4" + b"0" * 32
@@ -209,6 +210,7 @@ def test_scan_receipt_not_a_receipt(client, fake_llm):
     response = _upload(client, PNG_BYTES)
 
     assert response.status_code == 400
+    # Jinja autoescapes the apostrophe as &#39; by default — keep this escaped, not a literal apostrophe.
     assert "doesn&#39;t look like a receipt" in response.get_data(as_text=True)
 
 

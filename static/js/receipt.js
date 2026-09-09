@@ -16,6 +16,13 @@
         }
     }
 
+    function markSubmitting() {
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Reading receipt…";
+        }
+    }
+
     dropzone.addEventListener("dragover", function (event) {
         event.preventDefault();
         dropzone.classList.add("receipt-dropzone-active");
@@ -31,6 +38,7 @@
         if (event.dataTransfer && event.dataTransfer.files.length) {
             input.files = event.dataTransfer.files;
             showFilename(input.files[0]);
+            markSubmitting();
             form.submit();
         }
     });
@@ -38,14 +46,12 @@
     input.addEventListener("change", function () {
         if (input.files.length) {
             showFilename(input.files[0]);
+            markSubmitting();
             form.submit();
         }
     });
 
     form.addEventListener("submit", function () {
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = "Reading receipt…";
-        }
+        markSubmitting();
     });
 })();

@@ -81,6 +81,11 @@ def extract_receipt(image_bytes, media_type, today):
         raise llm_client.AIUnavailableError("The assistant is temporarily unavailable. Please try again.")
 
     try:
-        return json.loads(reply.text)
+        parsed = json.loads(reply.text)
     except (ValueError, TypeError):
         raise llm_client.AIUnavailableError("The assistant is temporarily unavailable. Please try again.")
+
+    if not isinstance(parsed, dict):
+        raise llm_client.AIUnavailableError("The assistant is temporarily unavailable. Please try again.")
+
+    return parsed
