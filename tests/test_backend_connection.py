@@ -112,11 +112,25 @@ def test_profile_authenticated_seed_user(client):
 
     assert response.status_code == 200
     assert "Demo User" in body
-    assert "demo@spendly.com" in body
     assert "₹318.24" in body
     assert "Bills" in body
     for category in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]:
         assert category in body
+    assert 'class="profile-sidebar"' in body
+    assert "Dashboard" in body
+    assert "Soon" in body
+    assert 'id="monthly-chart"' in body
+    assert 'id="category-chart"' in body
+
+
+def test_profile_hides_top_navbar_now_wired(client):
+    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+
+    response = client.get("/profile")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'class="navbar"' not in body
 
 
 def test_profile_new_user_empty_state(client):

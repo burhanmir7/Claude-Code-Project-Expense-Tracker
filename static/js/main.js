@@ -28,3 +28,25 @@
         });
     }
 })();
+
+(function () {
+    var clockEl = document.getElementById("profile-dashboard-clock");
+    if (!clockEl) {
+        return;
+    }
+
+    var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    function render() {
+        var now = new Date();
+        var hours = now.getHours();
+        var period = hours >= 12 ? "PM" : "AM";
+        var displayHours = hours % 12 || 12;
+        var minutes = now.getMinutes();
+        var minuteStr = minutes < 10 ? "0" + minutes : String(minutes);
+        clockEl.textContent = displayHours + ":" + minuteStr + " " + period + " | " + now.getDate() + " " + MONTHS[now.getMonth()] + " " + now.getFullYear();
+    }
+
+    render();
+    setInterval(render, 30000);
+})();

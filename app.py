@@ -15,6 +15,7 @@ from database.queries import (
     get_category_breakdown,
     get_chat_messages,
     get_expense_by_id,
+    get_monthly_totals,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
@@ -213,11 +214,19 @@ def profile():
         for c in get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
     ]
 
+    month_start = today.replace(day=1).isoformat()
+    monthly_expenses_total = get_summary_stats(user_id, date_from=month_start, date_to=today.isoformat())["total_spent"]
+    monthly_expenses = f"₹{monthly_expenses_total:,.2f}"
+    monthly_totals = get_monthly_totals(user_id)
+    category_breakdown = get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
+
     return render_template(
         "profile.html", user=user, stats=stats,
         transactions=transactions, categories=categories,
         selected_from=date_from, selected_to=date_to,
         active_preset=active_preset, preset_ranges=preset_ranges,
+        monthly_expenses=monthly_expenses, monthly_totals=monthly_totals,
+        category_breakdown=category_breakdown, hide_chrome=True,
     )
 
 

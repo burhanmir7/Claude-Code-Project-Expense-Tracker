@@ -330,7 +330,7 @@ def test_zero_match_range_shows_empty_state_no_errors(client):
 
     assert response.status_code == 200
     assert "₹0.00" in body
-    assert "Total spent" in body, "Page must still render normally, not error out"
+    assert "Total Spent" in body, "Page must still render normally, not error out"
 
     stats = get_summary_stats(DEMO_USER_ID, date_from=date_from, date_to=date_to)
     assert stats == {"total_spent": 0, "transaction_count": 0, "top_category": "—"}
