@@ -21,6 +21,8 @@
         <p id="chat-status" class="chat-status" hidden></p>
 
         <form id="chat-form" class="chat-form">
+            <input type="file" id="chat-attach-input" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
+            <button type="button" id="chat-attach-button" class="chat-attach" aria-label="Attach a receipt image">📎</button>
             <textarea id="chat-input" class="chat-input" maxlength="2000" rows="1" placeholder="Ask about your spending..."></textarea>
             <button type="submit" class="chat-send">Send</button>
         </form>

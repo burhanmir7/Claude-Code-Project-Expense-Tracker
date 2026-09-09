@@ -16,6 +16,10 @@
 
     var quickstartForm = document.getElementById("profile-chat-quickstart-form");
     var quickstartInput = document.getElementById("profile-chat-quickstart-input");
+    var attachButton = document.getElementById("chat-attach-button");
+    var attachInput = document.getElementById("chat-attach-input");
+    var quickstartAttachButton = document.getElementById("profile-chat-quickstart-attach-button");
+    var quickstartAttachInput = document.getElementById("profile-chat-quickstart-attach");
 
     var historyUrl = drawer.getAttribute("data-history-url");
     var sendUrl = drawer.getAttribute("data-send-url");
@@ -89,6 +93,95 @@
         bubble.textContent = text;
         messagesEl.appendChild(bubble);
         scrollToBottom();
+    }
+
+    function appendReceiptCard(replyText, expense, saveUrl) {
+        if (!messagesEl) {
+            return;
+        }
+        clearEmptyState();
+
+        appendBubble("assistant", replyText);
+
+        var card = document.createElement("div");
+        card.className = "chat-receipt-card";
+
+        var summary = document.createElement("div");
+        summary.textContent = expense.category + " · ₹" + expense.amount + " · " + expense.date +
+            (expense.description ? " · " + expense.description : "");
+        card.appendChild(summary);
+
+        var saveButton = document.createElement("button");
+        saveButton.type = "button";
+        saveButton.className = "chat-receipt-save";
+        saveButton.textContent = "Save as expense";
+        saveButton.addEventListener("click", function () {
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving…";
+
+            fetch("/api/expenses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(expense)
+            })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        return { ok: response.ok, data: data };
+                    });
+                })
+                .then(function (result) {
+                    if (result.ok) {
+                        appendBubble("assistant", "Saved — reloading to update your totals…");
+                        window.location.reload();
+                    } else {
+                        saveButton.disabled = false;
+                        saveButton.textContent = "Save as expense";
+                        appendBubble("error", result.data.error || "Something went wrong.");
+                    }
+                })
+                .catch(function () {
+                    saveButton.disabled = false;
+                    saveButton.textContent = "Save as expense";
+                    appendBubble("error", "Something went wrong.");
+                });
+        });
+        card.appendChild(saveButton);
+
+        messagesEl.appendChild(card);
+        scrollToBottom();
+    }
+
+    function scanReceipt(file) {
+        appendBubble("user", "📎 " + file.name);
+        setInputDisabled(true);
+        setStatus("Reading receipt…");
+
+        var formData = new FormData();
+        formData.append("receipt", file);
+
+        fetch("/api/chat/receipt", {
+            method: "POST",
+            body: formData
+        })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                setInputDisabled(false);
+                setStatus("");
+                if (result.ok) {
+                    appendReceiptCard(result.data.reply, result.data.expense);
+                } else {
+                    appendBubble("error", result.data.error || "Something went wrong.");
+                }
+            })
+            .catch(function () {
+                setInputDisabled(false);
+                setStatus("");
+                appendBubble("error", "Something went wrong.");
+            });
     }
 
     function setStatus(text) {
@@ -232,6 +325,34 @@
             quickstartInput.value = "";
             setOpen(true);
             sendMessage(text);
+        });
+    }
+
+    if (attachButton && attachInput) {
+        attachButton.addEventListener("click", function () {
+            attachInput.click();
+        });
+        attachInput.addEventListener("change", function () {
+            if (attachInput.files.length) {
+                var file = attachInput.files[0];
+                attachInput.value = "";
+                setOpen(true);
+                scanReceipt(file);
+            }
+        });
+    }
+
+    if (quickstartAttachButton && quickstartAttachInput) {
+        quickstartAttachButton.addEventListener("click", function () {
+            quickstartAttachInput.click();
+        });
+        quickstartAttachInput.addEventListener("change", function () {
+            if (quickstartAttachInput.files.length) {
+                var file = quickstartAttachInput.files[0];
+                quickstartAttachInput.value = "";
+                setOpen(true);
+                scanReceipt(file);
+            }
         });
     }
 
