@@ -105,6 +105,19 @@ def test_profile_unauthenticated_redirects(client):
     assert "/login" in response.headers["Location"]
 
 
+def test_profile_stale_session_user_redirects_to_login(client):
+    """A session cookie can outlive the user row it points to (e.g. the
+    database was recreated while a browser session was still active).
+    This must redirect to login, not crash with a raw 500."""
+    with client.session_transaction() as sess:
+        sess["user_id"] = 999999
+
+    response = client.get("/profile")
+
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+
+
 def test_profile_authenticated_seed_user(client):
     client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
     response = client.get("/profile")

@@ -186,6 +186,10 @@ def profile():
     filter_note = "All Time" if active_preset == "all_time" else "Filtered"
 
     profile_user = get_user_by_id(user_id)
+    if profile_user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
     stats_raw = get_summary_stats(user_id, date_from=date_from, date_to=date_to)
 
     initials = "".join(word[0] for word in profile_user["name"].split()[:2]).upper()
