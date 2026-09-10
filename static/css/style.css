@@ -16,6 +16,8 @@
     --accent-2-light: #fdf3e3;
     --danger: #c0392b;
     --danger-light: #fdecea;
+    --accent-3: #2f6690;
+    --accent-3-light: #e6eef4;
     --border: #e4e1da;
     --border-soft: #eeebe4;
 
@@ -44,6 +46,8 @@
     --accent-2-light: #3a2c14;
     --danger: #e8776a;
     --danger-light: #3c211d;
+    --accent-3: #7fb3d9;
+    --accent-3-light: #1c2e3a;
     --border: #34363a;
     --border-soft: #2a2c2f;
 }
