@@ -703,6 +703,15 @@
     color: var(--ink);
 }
 
+.profile-balance-value-negative {
+    color: var(--danger);
+}
+
+.profile-balance-note {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+}
+
 .profile-balance-select {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);

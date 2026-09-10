@@ -151,9 +151,26 @@
                 <p class="profile-balance-empty">No investments yet. <a href="{{ url_for('add_account', type='investment') }}">Add one</a></p>
                 {% endif %}
             </div>
-            <div class="profile-kpi-card profile-kpi-card-soon" aria-disabled="true">
-                <span class="profile-kpi-label">Goal <span class="profile-sidebar-soon">Soon</span></span>
-                <span class="profile-kpi-ring" aria-hidden="true"></span>
+            <div class="profile-kpi-card profile-balance-card">
+                <div class="profile-balance-header">
+                    <span class="profile-balance-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20V10"></path>
+                            <path d="M18 20V4"></path>
+                            <path d="M6 20v-4"></path>
+                        </svg>
+                    </span>
+                    <span class="profile-balance-title">Net Worth</span>
+                    <div class="profile-balance-menu">
+                        <button type="button" class="profile-balance-menu-toggle" aria-label="Net worth options" aria-haspopup="true" aria-expanded="false">⋮</button>
+                        <div class="profile-balance-menu-dropdown" hidden>
+                            <a href="{{ url_for('accounts') }}">Manage accounts</a>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="profile-balance-value{% if net_worth_is_negative %} profile-balance-value-negative{% endif %}">{{ net_worth }}</span>
+                <p class="profile-balance-note">{{ net_worth_account_count }} account{{ "s" if net_worth_account_count != 1 else "" }}</p>
             </div>
         </div>
 

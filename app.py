@@ -224,6 +224,11 @@ def profile():
     total_debt = f"₹{sum(a['balance'] for a in debt_accounts):,.2f}"
     total_investment = f"₹{sum(a['balance'] for a in investment_accounts):,.2f}"
 
+    net = get_net_worth(user_id)
+    net_worth = f"₹{net['net_worth']:,.2f}"
+    net_worth_is_negative = net["net_worth"] < 0
+    net_worth_account_count = net["account_count"]
+
     return render_template(
         "profile.html", user=user, stats=stats,
         transactions=transactions,
@@ -234,6 +239,8 @@ def profile():
         accounts=accounts, total_balance=total_balance,
         debt_accounts=debt_accounts, total_debt=total_debt,
         investment_accounts=investment_accounts, total_investment=total_investment,
+        net_worth=net_worth, net_worth_is_negative=net_worth_is_negative,
+        net_worth_account_count=net_worth_account_count,
     )
 
 
