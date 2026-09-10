@@ -894,3 +894,21 @@
     color: var(--color-neutral-500);
     margin: 0 0 8px;
 }
+
+/* ------------------------------------------------------------------ */
+/* Toast                                                                */
+/* ------------------------------------------------------------------ */
+
+.dashboard-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 13px;
+    color: var(--color-text);
+    z-index: 1000;
+}

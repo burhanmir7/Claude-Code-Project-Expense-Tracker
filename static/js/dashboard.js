@@ -313,3 +313,90 @@
     var categoryContainer = document.getElementById("category-chart");
     renderCategoryChart(categoryContainer, readJSON(categoryContainer, "data-categories"));
 })();
+
+(function () {
+    function showToast(message) {
+        var existing = document.querySelector(".dashboard-toast");
+        if (existing) {
+            existing.remove();
+        }
+        var toast = document.createElement("div");
+        toast.className = "dashboard-toast";
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function () {
+            toast.remove();
+        }, 2200);
+    }
+
+    var addToggle = document.getElementById("profile-add-expense-toggle");
+    var addRow = document.getElementById("profile-add-expense-row");
+    if (addToggle && addRow) {
+        addToggle.addEventListener("click", function () {
+            addRow.hidden = !addRow.hidden;
+        });
+    }
+
+    var cancelButton = document.getElementById("profile-add-expense-cancel");
+    if (cancelButton && addRow) {
+        cancelButton.addEventListener("click", function () {
+            addRow.hidden = true;
+        });
+    }
+
+    var saveButton = document.getElementById("profile-add-expense-save");
+    if (saveButton) {
+        saveButton.addEventListener("click", function () {
+            var descriptionEl = document.getElementById("profile-add-expense-description");
+            var amountEl = document.getElementById("profile-add-expense-amount");
+            var categoryEl = document.getElementById("profile-add-expense-category");
+            var dateEl = document.getElementById("profile-add-expense-date");
+
+            var description = descriptionEl.value.trim();
+            var amount = parseFloat(amountEl.value);
+
+            if (!description || isNaN(amount) || amount <= 0) {
+                showToast("Enter a description and a valid amount.");
+                return;
+            }
+
+            fetch("/api/expenses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    description: description,
+                    amount: String(amount),
+                    category: categoryEl.value,
+                    date: dateEl.value || new Date().toISOString().slice(0, 10),
+                }),
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("save failed");
+                    }
+                    showToast("Expense added.");
+                    window.location.reload();
+                })
+                .catch(function () {
+                    showToast("Could not save the expense.");
+                });
+        });
+    }
+
+    var chips = document.querySelectorAll(".assistant-chip");
+    var chatInput = document.getElementById("profile-chat-quickstart-input");
+    var chatForm = document.getElementById("profile-chat-quickstart-form");
+    for (var i = 0; i < chips.length; i++) {
+        chips[i].addEventListener("click", function (event) {
+            if (!chatInput || !chatForm) {
+                return;
+            }
+            chatInput.value = event.currentTarget.getAttribute("data-question");
+            if (chatForm.requestSubmit) {
+                chatForm.requestSubmit();
+            } else {
+                chatForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        });
+    }
+})();
