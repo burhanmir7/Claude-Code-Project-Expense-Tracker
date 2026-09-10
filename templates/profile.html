@@ -175,6 +175,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
             <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
                 <h2 class="font-display text-lg text-ink mb-1">Monthly spending</h2>
+                <p class="text-sm text-inkMuted mb-1">Total spent: {{ stats[0].value }}</p>
                 <p class="text-sm text-inkMuted mb-2">{{ stats[1].value }} transactions this range</p>
                 <canvas id="monthly-chart" data-monthly="{{ monthly_totals | tojson | forceescape }}"></canvas>
             </div>
