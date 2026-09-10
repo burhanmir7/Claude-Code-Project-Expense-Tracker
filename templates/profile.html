@@ -9,10 +9,10 @@
 
 {% block content %}
 
-<div class="profile-dashboard-shell">
+<div class="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-3rem)]">
     {% include "_dashboard_sidebar.html" %}
 
-    <div class="profile-dashboard-main flex-1 min-w-0 flex flex-col gap-5 py-6 px-6">
+    <div class="flex-1 min-w-0 flex flex-col gap-5 py-6 px-6">
         <div class="flex items-center gap-4 flex-wrap">
             <div>
                 <h1 class="font-display text-2xl text-ink">Hi, {{ user.name }} 👋</h1>
