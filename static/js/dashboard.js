@@ -30,6 +30,48 @@
         return value ? value.trim() : "#999999";
     }
 
+    function formatRupees(amount) {
+        return "₹" + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function wireBalanceCard(card) {
+        var accounts = readJSON(card, "data-accounts");
+        var value = card.querySelector(".profile-balance-value");
+        var select = card.querySelector(".profile-balance-select");
+
+        if (accounts && value && select) {
+            select.addEventListener("change", function () {
+                if (select.value === "all") {
+                    var total = accounts.reduce(function (sum, a) { return sum + a.balance; }, 0);
+                    value.textContent = formatRupees(total);
+                    return;
+                }
+                var selected = accounts.filter(function (a) { return String(a.id) === select.value; })[0];
+                value.textContent = formatRupees(selected ? selected.balance : 0);
+            });
+        }
+
+        var menuToggle = card.querySelector(".profile-balance-menu-toggle");
+        var menuDropdown = card.querySelector(".profile-balance-menu-dropdown");
+        if (menuToggle && menuDropdown) {
+            menuToggle.addEventListener("click", function (event) {
+                event.stopPropagation();
+                var isOpen = !menuDropdown.hidden;
+                menuDropdown.hidden = isOpen;
+                menuToggle.setAttribute("aria-expanded", String(!isOpen));
+            });
+            document.addEventListener("click", function () {
+                menuDropdown.hidden = true;
+                menuToggle.setAttribute("aria-expanded", "false");
+            });
+        }
+    }
+
+    var balanceCards = document.querySelectorAll(".profile-balance-card");
+    for (var i = 0; i < balanceCards.length; i++) {
+        wireBalanceCard(balanceCards[i]);
+    }
+
     if (typeof Chart === "undefined") {
         return;
     }

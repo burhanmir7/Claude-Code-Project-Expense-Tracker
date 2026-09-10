@@ -56,19 +56,100 @@
         </div>
 
         <div class="profile-kpi-row">
-            <div class="profile-kpi-card">
-                <span class="profile-kpi-label">Total Spent</span>
-                <span class="profile-kpi-value">{{ stats[0].value }}</span>
-                <span class="profile-kpi-note">{{ stats[0].note }}</span>
+            <div class="profile-kpi-card profile-balance-card" data-accounts="{{ accounts | tojson | forceescape }}">
+                <div class="profile-balance-header">
+                    <span class="profile-balance-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="6" width="20" height="13" rx="2"></rect>
+                            <path d="M2 10h20"></path>
+                            <circle cx="16.5" cy="14.5" r="1.25" fill="currentColor" stroke="none"></circle>
+                        </svg>
+                    </span>
+                    <span class="profile-balance-title">Account Balance</span>
+                    <div class="profile-balance-menu">
+                        <button type="button" class="profile-balance-menu-toggle" id="profile-balance-menu-toggle" aria-label="Account options" aria-haspopup="true" aria-expanded="false">⋮</button>
+                        <div class="profile-balance-menu-dropdown" id="profile-balance-menu-dropdown" hidden>
+                            <a href="{{ url_for('add_account') }}">Add account</a>
+                            <a href="{{ url_for('accounts') }}">Manage accounts</a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if accounts %}
+                <span class="profile-balance-value" id="profile-balance-value">{{ total_balance }}</span>
+                <select class="profile-balance-select" id="profile-balance-select" aria-label="Select account">
+                    <option value="all">All Accounts</option>
+                    {% for a in accounts %}
+                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <span class="profile-balance-value">₹0.00</span>
+                <p class="profile-balance-empty">No accounts yet. <a href="{{ url_for('add_account') }}">Add one</a></p>
+                {% endif %}
             </div>
-            <div class="profile-kpi-card">
-                <span class="profile-kpi-label">Monthly Expenses</span>
-                <span class="profile-kpi-value">{{ monthly_expenses }}</span>
-                <span class="profile-kpi-note">This calendar month</span>
+            <div class="profile-kpi-card profile-balance-card" data-accounts="{{ debt_accounts | tojson | forceescape }}">
+                <div class="profile-balance-header">
+                    <span class="profile-balance-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="7" width="18" height="12" rx="2"></rect>
+                            <path d="M3 11h18"></path>
+                            <path d="M7 15h4"></path>
+                        </svg>
+                    </span>
+                    <span class="profile-balance-title">Debt</span>
+                    <div class="profile-balance-menu">
+                        <button type="button" class="profile-balance-menu-toggle" id="profile-debt-menu-toggle" aria-label="Debt options" aria-haspopup="true" aria-expanded="false">⋮</button>
+                        <div class="profile-balance-menu-dropdown" id="profile-debt-menu-dropdown" hidden>
+                            <a href="{{ url_for('add_account', type='debt') }}">Add account</a>
+                            <a href="{{ url_for('accounts') }}">Manage accounts</a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if debt_accounts %}
+                <span class="profile-balance-value" id="profile-debt-value">{{ total_debt }}</span>
+                <select class="profile-balance-select" id="profile-debt-select" aria-label="Select debt account">
+                    <option value="all">All Debts</option>
+                    {% for a in debt_accounts %}
+                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <span class="profile-balance-value">₹0.00</span>
+                <p class="profile-balance-empty">No debts yet. <a href="{{ url_for('add_account', type='debt') }}">Add one</a></p>
+                {% endif %}
             </div>
-            <div class="profile-kpi-card profile-kpi-card-soon" aria-disabled="true">
-                <span class="profile-kpi-label">Total Investment <span class="profile-sidebar-soon">Soon</span></span>
-                <span class="profile-kpi-value">₹0.00</span>
+            <div class="profile-kpi-card profile-balance-card" data-accounts="{{ investment_accounts | tojson | forceescape }}">
+                <div class="profile-balance-header">
+                    <span class="profile-balance-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 17 9 11 13 15 21 7"></polyline>
+                            <polyline points="14 7 21 7 21 14"></polyline>
+                        </svg>
+                    </span>
+                    <span class="profile-balance-title">Total Investment</span>
+                    <div class="profile-balance-menu">
+                        <button type="button" class="profile-balance-menu-toggle" id="profile-investment-menu-toggle" aria-label="Investment options" aria-haspopup="true" aria-expanded="false">⋮</button>
+                        <div class="profile-balance-menu-dropdown" id="profile-investment-menu-dropdown" hidden>
+                            <a href="{{ url_for('add_account', type='investment') }}">Add account</a>
+                            <a href="{{ url_for('accounts') }}">Manage accounts</a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if investment_accounts %}
+                <span class="profile-balance-value" id="profile-investment-value">{{ total_investment }}</span>
+                <select class="profile-balance-select" id="profile-investment-select" aria-label="Select investment">
+                    <option value="all">All Investments</option>
+                    {% for a in investment_accounts %}
+                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <span class="profile-balance-value">₹0.00</span>
+                <p class="profile-balance-empty">No investments yet. <a href="{{ url_for('add_account', type='investment') }}">Add one</a></p>
+                {% endif %}
             </div>
             <div class="profile-kpi-card profile-kpi-card-soon" aria-disabled="true">
                 <span class="profile-kpi-label">Goal <span class="profile-sidebar-soon">Soon</span></span>

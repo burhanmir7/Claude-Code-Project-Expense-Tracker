@@ -186,6 +186,34 @@ No new dependencies.
 - No inline styles
 - Currency must always display as ₹ — never £ or $
 
+## Amendment (post-dashboard-redesign)
+
+Written after the profile-page dashboard redesign shipped, when this step was
+actually implemented. Supersedes the affected parts of "Templates" and
+"Files to change" above:
+
+- No separate "Net worth" stat tile. Instead, the dashboard's existing
+  `stats[0]` "Total Spent" KPI card is replaced by a richer
+  `.profile-balance-card`: a bank icon, "Account Balance" title, a
+  three-dot menu (Add account / Manage accounts), a balance figure, and a
+  `<select>` of "All Accounts" plus each account by name. Selecting an
+  account shows its raw balance; selecting "All" shows the raw sum of every
+  account's balance (not assets-minus-debts — that net-worth figure still
+  lives on the dedicated `/accounts` page's summary card via
+  `get_net_worth`). No month-over-month trend indicator: the data model
+  intentionally has no balance history/ledger (see "Database changes"
+  above), so a real trend can't be computed; this stays out of scope.
+- All accounts' `{id, name, balance}` are embedded on `/profile` as a
+  `data-accounts` JSON attribute (the same pattern `dashboard.js` already
+  uses for chart data), and a small vanilla-JS handler swaps the displayed
+  number on `<select>` change with no new API endpoint or route.
+- Nav link placement: the dashboard redesign split navigation into two
+  surfaces that didn't exist when this spec was written. "Accounts" is
+  added to both `templates/base.html`'s top nav (used by `/accounts` and
+  its add/edit pages, which still follow the pre-redesign
+  `base.html`-extending form pattern) and `templates/_dashboard_sidebar.html`
+  (used by `/profile`), instead of only `base.html` as originally written.
+
 ## Tests to write
 File: `tests/test_wealth_management.py`
 

@@ -1,0 +1,181 @@
+/* ------------------------------------------------------------------ */
+/* Layout                                                              */
+/* ------------------------------------------------------------------ */
+
+.accounts-section {
+    padding: 3rem 2rem;
+}
+
+.accounts-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.accounts-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.accounts-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.accounts-subtitle {
+    color: var(--ink-muted);
+    margin-top: 0.25rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Summary                                                              */
+/* ------------------------------------------------------------------ */
+
+.accounts-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.accounts-summary-item {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.accounts-summary-label {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+}
+
+.accounts-summary-value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.accounts-networth-negative {
+    color: var(--danger);
+}
+
+/* ------------------------------------------------------------------ */
+/* Table                                                                */
+/* ------------------------------------------------------------------ */
+
+.accounts-table-wrap {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+.accounts-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.accounts-table th,
+.accounts-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-soft);
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.accounts-table th {
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.accounts-table tbody tr:hover {
+    background: var(--paper-warm);
+}
+
+.accounts-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.accounts-col-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.accounts-col-actions {
+    text-align: right;
+}
+
+.accounts-table-empty td {
+    text-align: center;
+    color: var(--ink-muted);
+    padding: 2rem 1rem;
+}
+
+.accounts-action-link {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    color: var(--ink-muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.accounts-action-link svg {
+    width: 100%;
+    height: 100%;
+}
+
+.accounts-action-link:hover {
+    color: var(--accent);
+}
+
+.accounts-action-delete:hover {
+    color: var(--danger);
+}
+
+.accounts-delete-form {
+    display: inline-flex;
+    margin-left: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Type badges                                                         */
+/* ------------------------------------------------------------------ */
+
+.accounts-type {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.accounts-type-savings { color: var(--accent); background: var(--accent-light); }
+.accounts-type-investment { color: var(--accent-2); background: var(--accent-2-light); }
+.accounts-type-debt { color: var(--danger); background: var(--danger-light); }
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+    .accounts-summary {
+        grid-template-columns: 1fr;
+    }
+}

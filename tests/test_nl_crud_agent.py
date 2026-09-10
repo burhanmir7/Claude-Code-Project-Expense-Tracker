@@ -46,7 +46,10 @@ def login_demo(client):
 def test_get_tool_definitions_order_and_names(client):
     names = [d["name"] for d in get_tool_definitions()]
 
-    assert names == ["list_expenses", "add_expense", "update_expense", "delete_expense"]
+    assert names == [
+        "list_expenses", "add_expense", "update_expense", "delete_expense",
+        "list_accounts", "get_net_worth", "add_account", "update_account_balance",
+    ]
 
 
 def test_get_tool_definitions_schema_shape(client):

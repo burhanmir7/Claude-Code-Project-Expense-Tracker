@@ -132,7 +132,8 @@ def test_profile_no_params_returns_unfiltered_alltime_data(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert DEMO_TOTAL in body, "Unfiltered total must match the full seed data sum"
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL, "Unfiltered total must match the full seed data sum"
     assert DEMO_TOP_CATEGORY in body
     for category in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]:
         assert category in body
@@ -149,10 +150,10 @@ def test_profile_alltime_includes_expenses_older_than_any_preset_window(client):
     insert_expense(uid, 10.00, "Food", today, "recent")
 
     response = client.get("/profile")
-    body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "₹50.00" in body, "All-time view must include the 400-day-old expense too"
+    stats = get_summary_stats(uid)
+    assert stats["total_spent"] == 50.00, "All-time view must include the 400-day-old expense too"
 
 
 # ------------------------------------------------------------------ #
@@ -168,10 +169,10 @@ def test_this_month_preset_range_matches_seed_data_totals(client):
     month_start = today.replace(day=1)
 
     response = client.get(f"/profile?date_from={month_start.isoformat()}&date_to={today.isoformat()}")
-    body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert DEMO_TOTAL in body
+    stats = get_summary_stats(DEMO_USER_ID, date_from=month_start.isoformat(), date_to=today.isoformat())
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL
 
 
 def test_this_month_preset_excludes_previous_month_expenses(client):
@@ -251,7 +252,8 @@ def test_custom_range_filters_inclusive_boundaries(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "₹60.00" in body, "Total should be 10 + 20 + 30 = 60.00, inclusive of both boundaries"
+    stats = get_summary_stats(uid, date_from=date_from, date_to=date_to)
+    assert stats["total_spent"] == 60.00, "Total should be 10 + 20 + 30 = 60.00, inclusive of both boundaries"
     assert "₹999.00" not in body
     assert "₹888.00" not in body
 
@@ -271,7 +273,8 @@ def test_invalid_order_falls_back_and_flashes_error(client):
 
     assert response.status_code == 200
     assert INVALID_ORDER_FLASH in body, "date_from > date_to must flash the exact spec'd error message"
-    assert DEMO_TOTAL in body, "Invalid order must fall back to the unfiltered totals"
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL, "Invalid order must fall back to the unfiltered totals"
 
 
 def test_malformed_date_from_falls_back_without_crash_or_flash(client):
@@ -280,7 +283,8 @@ def test_malformed_date_from_falls_back_without_crash_or_flash(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200, "Malformed date must never crash the app"
-    assert DEMO_TOTAL in body, "Malformed date must fall back to unfiltered totals"
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL, "Malformed date must fall back to unfiltered totals"
     assert INVALID_ORDER_FLASH not in body, "Malformed input is not an ordering error and must not flash it"
 
 
@@ -290,7 +294,8 @@ def test_malformed_date_to_falls_back_without_crash_or_flash(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert DEMO_TOTAL in body
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL
     assert INVALID_ORDER_FLASH not in body
 
 
@@ -299,20 +304,20 @@ def test_only_date_from_provided_falls_back_to_unfiltered(client):
     login_demo(client)
     today = date.today()
     response = client.get(f"/profile?date_from={today.isoformat()}")
-    body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert DEMO_TOTAL in body
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL
 
 
 def test_only_date_to_provided_falls_back_to_unfiltered(client):
     login_demo(client)
     today = date.today()
     response = client.get(f"/profile?date_to={today.isoformat()}")
-    body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert DEMO_TOTAL in body
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == DEMO_TOTAL
 
 
 # ------------------------------------------------------------------ #
@@ -330,7 +335,7 @@ def test_zero_match_range_shows_empty_state_no_errors(client):
 
     assert response.status_code == 200
     assert "₹0.00" in body
-    assert "Total Spent" in body, "Page must still render normally, not error out"
+    assert "Account Balance" in body, "Page must still render normally, not error out"
 
     stats = get_summary_stats(DEMO_USER_ID, date_from=date_from, date_to=date_to)
     assert stats == {"total_spent": 0, "transaction_count": 0, "top_category": "—"}

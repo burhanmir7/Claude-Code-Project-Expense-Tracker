@@ -202,6 +202,103 @@ def delete_chat_messages(user_id):
         conn.close()
 
 
+def get_accounts(user_id):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, name, type, balance, updated_at FROM accounts "
+            "WHERE user_id = ? ORDER BY type, name",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return [
+        {"id": r["id"], "name": r["name"], "type": r["type"], "balance": r["balance"], "updated_at": r["updated_at"]}
+        for r in rows
+    ]
+
+
+def get_account_by_id(account_id, user_id):
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, name, type, balance, updated_at FROM accounts "
+            "WHERE id = ? AND user_id = ?",
+            (account_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        return None
+    return {"id": row["id"], "name": row["name"], "type": row["type"], "balance": row["balance"], "updated_at": row["updated_at"]}
+
+
+def insert_account(user_id, name, account_type, balance):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO accounts (user_id, name, type, balance) VALUES (?, ?, ?, ?)",
+            (user_id, name, account_type, balance),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
+def update_account(account_id, user_id, name, account_type, balance):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "UPDATE accounts SET name = ?, type = ?, balance = ?, updated_at = datetime('now') "
+            "WHERE id = ? AND user_id = ?",
+            (name, account_type, balance, account_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
+def delete_account_by_id(account_id, user_id):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM accounts WHERE id = ? AND user_id = ?",
+            (account_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
+def get_net_worth(user_id):
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT "
+            "COALESCE(SUM(CASE WHEN type != 'debt' THEN balance ELSE 0 END), 0) AS assets, "
+            "COALESCE(SUM(CASE WHEN type = 'debt' THEN balance ELSE 0 END), 0) AS debts, "
+            "COUNT(*) AS cnt "
+            "FROM accounts WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    assets = row["assets"]
+    debts = row["debts"]
+    return {
+        "assets": assets,
+        "debts": debts,
+        "net_worth": assets - debts,
+        "account_count": row["cnt"],
+    }
+
+
 def get_monthly_totals(user_id, months=6):
     conn = get_db()
     try:

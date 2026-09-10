@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/accounts.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="accounts-section">
+    <div class="accounts-container">
+
+        <div class="accounts-header">
+            <div>
+                <h1 class="accounts-title">Accounts</h1>
+                <p class="accounts-subtitle">Track the balances of your savings, debt, and investment accounts.</p>
+            </div>
+            <a href="{{ url_for('add_account') }}" class="btn-primary">Add account</a>
+        </div>
+
+        <div class="accounts-summary">
+            <div class="accounts-summary-item">
+                <span class="accounts-summary-label">Assets</span>
+                <span class="accounts-summary-value">{{ net_worth.assets }}</span>
+            </div>
+            <div class="accounts-summary-item">
+                <span class="accounts-summary-label">Debts</span>
+                <span class="accounts-summary-value">{{ net_worth.debts }}</span>
+            </div>
+            <div class="accounts-summary-item">
+                <span class="accounts-summary-label">Net worth</span>
+                <span class="accounts-summary-value{% if net_worth.is_negative %} accounts-networth-negative{% endif %}">
+                    {{ net_worth.net_worth }}
+                </span>
+            </div>
+        </div>
+
+        <div class="accounts-table-wrap">
+            <table class="accounts-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th class="accounts-col-amount">Balance</th>
+                        <th>Updated</th>
+                        <th class="accounts-col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in accounts %}
+                    <tr>
+                        <td>{{ a.name }}</td>
+                        <td><span class="accounts-type accounts-type-{{ a.type }}">{{ a.type|capitalize }}</span></td>
+                        <td class="accounts-col-amount">{{ a.balance }}</td>
+                        <td>{{ a.updated_at }}</td>
+                        <td class="accounts-col-actions">
+                            <a href="{{ url_for('edit_account', id=a.id) }}" class="accounts-action-link" aria-label="Edit account">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                </svg>
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_account', id=a.id) }}" class="accounts-delete-form" onsubmit="return confirm('Delete this account?')">
+                                <button type="submit" class="accounts-action-link accounts-action-delete" aria-label="Delete account">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                        <path d="M10 11v6"></path>
+                                        <path d="M14 11v6"></path>
+                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="accounts-table-empty">
+                        <td colspan="5">No accounts yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

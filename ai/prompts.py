@@ -12,7 +12,12 @@ CHAT_SYSTEM_PROMPT = (
     "amount in ₹) and wait for the user to say yes. After making a change, "
     "state exactly what changed, including the amount in ₹. Dates are ISO "
     "YYYY-MM-DD; resolve relative dates like 'yesterday' or 'last Friday' "
-    "using the 'Today is' date given in the context."
+    "using the 'Today is' date given in the context. "
+    "Accounts hold a current balance, not a transaction history — they are "
+    "separate from expenses. Savings and investment accounts are assets; "
+    "debt accounts reduce net worth. Before updating an account's balance, "
+    "confirm which account the user means by name if there is more than "
+    "one candidate."
 )
 
 RECEIPT_PROMPT = (

@@ -10,19 +10,25 @@ from ai import llm_client
 from ai.chat import HISTORY_LIMIT, run_chat_turn
 from ai.tools import is_mutating
 from ai.receipts import MAX_RECEIPT_BYTES, detect_image_type, extract_receipt, normalise_receipt
-from database.db import CATEGORIES, create_user, get_user_by_email, init_db, seed_db
+from database.db import ACCOUNT_TYPES, CATEGORIES, create_user, get_user_by_email, init_db, seed_db
 from database.queries import (
+    delete_account_by_id,
     delete_chat_messages,
     delete_expense_by_id,
+    get_account_by_id,
+    get_accounts,
     get_category_breakdown,
     get_chat_messages,
     get_expense_by_id,
     get_monthly_totals,
+    get_net_worth,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
+    insert_account,
     insert_chat_message,
     insert_expense,
+    update_account,
     update_expense,
 )
 
@@ -207,19 +213,27 @@ def profile():
         for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)
     ]
 
-    month_start = today.replace(day=1).isoformat()
-    monthly_expenses_total = get_summary_stats(user_id, date_from=month_start, date_to=today.isoformat())["total_spent"]
-    monthly_expenses = f"₹{monthly_expenses_total:,.2f}"
     monthly_totals = get_monthly_totals(user_id)
     category_breakdown = get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
+
+    all_accounts = get_accounts(user_id)
+    accounts = [a for a in all_accounts if a["type"] == "savings"]
+    debt_accounts = [a for a in all_accounts if a["type"] == "debt"]
+    investment_accounts = [a for a in all_accounts if a["type"] == "investment"]
+    total_balance = f"₹{sum(a['balance'] for a in accounts):,.2f}"
+    total_debt = f"₹{sum(a['balance'] for a in debt_accounts):,.2f}"
+    total_investment = f"₹{sum(a['balance'] for a in investment_accounts):,.2f}"
 
     return render_template(
         "profile.html", user=user, stats=stats,
         transactions=transactions,
         selected_from=date_from, selected_to=date_to,
         active_preset=active_preset, preset_ranges=preset_ranges,
-        monthly_expenses=monthly_expenses, monthly_totals=monthly_totals,
+        monthly_totals=monthly_totals,
         category_breakdown=category_breakdown, hide_chrome=True,
+        accounts=accounts, total_balance=total_balance,
+        debt_accounts=debt_accounts, total_debt=total_debt,
+        investment_accounts=investment_accounts, total_investment=total_investment,
     )
 
 
@@ -343,6 +357,125 @@ def delete_expense(id):
 
     flash("Expense deleted successfully.", "success")
     return redirect(url_for("profile"))
+
+
+# ------------------------------------------------------------------ #
+# Account routes                                                       #
+# ------------------------------------------------------------------ #
+
+def _validate_account_form(name, account_type, balance_str):
+    if not name or not account_type:
+        return "Name and type are required."
+    if len(name) > 60:
+        return "Name must be 60 characters or fewer."
+    if account_type not in ACCOUNT_TYPES:
+        return "Please select a valid account type."
+    try:
+        balance_value = float(balance_str)
+    except ValueError:
+        return "Balance must be a valid number."
+    if balance_value < 0:
+        return "Balance must be zero or greater."
+    return None
+
+
+@app.route("/accounts")
+def accounts():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    account_list = [
+        {**a, "balance": f"₹{a['balance']:,.2f}"} for a in get_accounts(user_id)
+    ]
+    net = get_net_worth(user_id)
+    net_worth = {
+        "assets": f"₹{net['assets']:,.2f}",
+        "debts": f"₹{net['debts']:,.2f}",
+        "net_worth": f"₹{net['net_worth']:,.2f}",
+        "is_negative": net["net_worth"] < 0,
+    }
+
+    return render_template("accounts.html", accounts=account_list, net_worth=net_worth)
+
+
+@app.route("/accounts/add", methods=["GET", "POST"])
+def add_account():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        requested_type = request.args.get("type", "")
+        initial_type = requested_type if requested_type in ACCOUNT_TYPES else None
+        return render_template("add_account.html", account_types=ACCOUNT_TYPES, type=initial_type)
+
+    name = request.form.get("name", "").strip()
+    account_type = request.form.get("type", "").strip()
+    balance_str = request.form.get("balance", "").strip()
+
+    form_values = {"name": name, "type": account_type, "balance": balance_str}
+
+    def rerender(message):
+        flash(message, "error")
+        return render_template("add_account.html", account_types=ACCOUNT_TYPES, **form_values), 400
+
+    error = _validate_account_form(name, account_type, balance_str)
+    if error:
+        return rerender(error)
+
+    insert_account(session["user_id"], name, account_type, float(balance_str))
+
+    flash("Account added successfully.", "success")
+    return redirect(url_for("accounts"))
+
+
+@app.route("/accounts/<int:id>/edit", methods=["GET", "POST"])
+def edit_account(id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    existing = get_account_by_id(id, user_id)
+    if existing is None:
+        abort(404)
+
+    if request.method == "GET":
+        return render_template("edit_account.html", account_types=ACCOUNT_TYPES, account=existing)
+
+    name = request.form.get("name", "").strip()
+    account_type = request.form.get("type", "").strip()
+    balance_str = request.form.get("balance", "").strip()
+
+    form_values = {"id": id, "name": name, "type": account_type, "balance": balance_str}
+
+    def rerender(message):
+        flash(message, "error")
+        return render_template("edit_account.html", account_types=ACCOUNT_TYPES, account=form_values), 400
+
+    error = _validate_account_form(name, account_type, balance_str)
+    if error:
+        return rerender(error)
+
+    update_account(id, user_id, name, account_type, float(balance_str))
+
+    flash("Account updated successfully.", "success")
+    return redirect(url_for("accounts"))
+
+
+@app.route("/accounts/<int:id>/delete", methods=["POST"])
+def delete_account(id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    existing = get_account_by_id(id, user_id)
+    if existing is None:
+        abort(404)
+
+    delete_account_by_id(id, user_id)
+
+    flash("Account deleted successfully.", "success")
+    return redirect(url_for("accounts"))
 
 
 # ------------------------------------------------------------------ #

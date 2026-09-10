@@ -1,11 +1,16 @@
 from ai import llm_client
 from ai.prompts import CHAT_SYSTEM_PROMPT
-from ai.tools import execute_tool, get_tool_definitions
 
 HISTORY_LIMIT = 20
 MAX_TOOL_ROUNDS = 8
 
+# CONTEXT_PROVIDERS must exist before importing ai.tools below: tool modules
+# (e.g. ai.tools.accounts) append to it at import time, and that import chain
+# loops back through ai.tools -> this module, so this name must already be
+# set on the partially-initialized module by the time that happens.
 CONTEXT_PROVIDERS = []
+
+from ai.tools import execute_tool, get_tool_definitions  # noqa: E402
 
 
 def build_messages(history, user_text):

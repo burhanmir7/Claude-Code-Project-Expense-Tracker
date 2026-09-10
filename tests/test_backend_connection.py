@@ -112,7 +112,8 @@ def test_profile_authenticated_seed_user(client):
 
     assert response.status_code == 200
     assert "Demo User" in body
-    assert "₹318.24" in body
+    stats = get_summary_stats(DEMO_USER_ID)
+    assert f"₹{stats['total_spent']:,.2f}" == "₹318.24"
     assert "Bills" in body
     for category in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]:
         assert category in body
