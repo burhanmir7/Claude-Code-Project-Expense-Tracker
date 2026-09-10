@@ -259,6 +259,19 @@
 .category-badge-other { color: var(--cat-other); background: var(--cat-other-bg); }
 
 /* ------------------------------------------------------------------ */
+/* Shared badge styles (used by sidebar Soon badges and profile.html stub cards) */
+/* ------------------------------------------------------------------ */
+
+.profile-sidebar-soon {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.1rem 0.35rem;
+}
+
+/* ------------------------------------------------------------------ */
 /* Chat quickstart                                                     */
 /* ------------------------------------------------------------------ */
 
