@@ -214,6 +214,36 @@ actually implemented. Supersedes the affected parts of "Templates" and
   `base.html`-extending form pattern) and `templates/_dashboard_sidebar.html`
   (used by `/profile`), instead of only `base.html` as originally written.
 
+## Amendment 2 (dashboard card split by type, and a delete tool)
+
+Written after further dashboard iteration and an explicit follow-up request
+to expose account deletion through chat:
+
+- The single `.profile-balance-card` above was split into four cards, one
+  per account type plus net worth: **Account Balance** (savings only),
+  **Debt**, **Total Investment**, and **Net Worth** — replacing the KPI
+  row's "Total Spent", "Monthly Expenses", "Total Investment", and "Goal"
+  slots respectively. Each of the first three has the dropdown-selector
+  behaviour described in Amendment 1, scoped to that one type; "All
+  Accounts"/"All Debts"/"All Investments" is the raw sum within that type,
+  never assets-minus-debts. Net Worth has no dropdown (it is a single
+  aggregate figure, not a per-account one) and instead shows
+  `get_net_worth`'s `net_worth` figure, styled red when negative, with an
+  account-count note. `static/js/dashboard.js` wires all such cards
+  generically by looping over every `.profile-balance-card` and resolving
+  each one's value/select/menu elements via `card.querySelector(...)`
+  rather than by hardcoded IDs or array indices, so adding another
+  type-scoped card later needs no JS changes.
+- **Supersedes the "No delete tool" decision above.** `ai/tools/accounts.py`
+  now also registers `delete_account` (input `{account_id}`, mutating),
+  following the exact same prompt-level confirm-before-delete pattern as
+  Step 11's `delete_expense`: its description text requires the model to
+  restate the account (name, type, balance) and get an explicit yes before
+  calling it. `ai/tools/__init__.py`'s registration order is now
+  `list_expenses, add_expense, update_expense, delete_expense,
+  list_accounts, get_net_worth, add_account, update_account_balance,
+  delete_account`.
+
 ## Tests to write
 File: `tests/test_wealth_management.py`
 

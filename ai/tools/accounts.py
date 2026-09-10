@@ -1,7 +1,14 @@
 from ai.chat import CONTEXT_PROVIDERS
 from ai.tools.registry import register_tool
 from database.db import ACCOUNT_TYPES
-from database.queries import get_account_by_id, get_accounts, get_net_worth, insert_account, update_account
+from database.queries import (
+    delete_account_by_id,
+    get_account_by_id,
+    get_accounts,
+    get_net_worth,
+    insert_account,
+    update_account,
+)
 
 
 def _validate_account_fields(name, account_type, balance):
@@ -115,6 +122,36 @@ def update_account_balance(user_id, tool_input):
     update_account(account_id, user_id, existing["name"], existing["type"], balance)
 
     return {"ok": True, "account": {"id": account_id, "name": existing["name"], "type": existing["type"], "balance": balance}}
+
+
+@register_tool(
+    {
+        "name": "delete_account",
+        "description": (
+            "Permanently delete one of the user's accounts. Only call this after the user has "
+            "explicitly confirmed, in their most recent message, that they want this specific "
+            "account deleted. If they have not confirmed, restate the account (name, type, "
+            "balance) and ask first."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "account_id": {"type": "integer"},
+            },
+            "required": ["account_id"],
+            "additionalProperties": False,
+        },
+    },
+    mutating=True,
+)
+def delete_account(user_id, tool_input):
+    account_id = tool_input.get("account_id")
+    rowcount = delete_account_by_id(account_id, user_id)
+
+    if rowcount == 0:
+        return {"error": "Account not found."}
+
+    return {"ok": True}
 
 
 def net_worth_context(user_id):

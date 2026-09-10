@@ -49,6 +49,7 @@ def test_get_tool_definitions_order_and_names(client):
     assert names == [
         "list_expenses", "add_expense", "update_expense", "delete_expense",
         "list_accounts", "get_net_worth", "add_account", "update_account_balance",
+        "delete_account",
     ]
 
 

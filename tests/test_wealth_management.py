@@ -263,6 +263,40 @@ def test_execute_tool_update_account_balance_cross_user_is_error(client):
 
 
 # ------------------------------------------------------------------ #
+# ai/tools — execute_tool: delete_account                              #
+# ------------------------------------------------------------------ #
+
+def test_execute_tool_delete_account_valid_removes_row(client):
+    account_id = insert_account(DEMO_USER_ID, "HDFC Savings", "savings", 50000)
+
+    content, is_error = execute_tool("delete_account", {"account_id": account_id}, DEMO_USER_ID)
+
+    assert is_error is False
+    payload = json.loads(content)
+    assert payload["ok"] is True
+    assert get_account_by_id(account_id, DEMO_USER_ID) is None
+
+
+def test_execute_tool_delete_account_cross_user_is_error(client):
+    register_new_user(client)
+    other_id = new_user_id_for(client)
+    account_id = insert_account(other_id, "Other Savings", "savings", 1000)
+
+    content, is_error = execute_tool("delete_account", {"account_id": account_id}, DEMO_USER_ID)
+
+    assert is_error is True
+    assert "error" in json.loads(content)
+    assert get_account_by_id(account_id, other_id) is not None, "another user's account must survive"
+
+
+def test_execute_tool_delete_account_unknown_id_is_error(client):
+    content, is_error = execute_tool("delete_account", {"account_id": 999999}, DEMO_USER_ID)
+
+    assert is_error is True
+    assert "error" in json.loads(content)
+
+
+# ------------------------------------------------------------------ #
 # ai/tools — execute_tool: get_net_worth                               #
 # ------------------------------------------------------------------ #
 
@@ -323,8 +357,8 @@ def test_get_tool_definitions_includes_account_tools_in_full_order(client):
     assert names == [
         "list_expenses", "add_expense", "update_expense", "delete_expense",
         "list_accounts", "get_net_worth", "add_account", "update_account_balance",
+        "delete_account",
     ]
-    assert "delete_account" not in names, "there is intentionally no delete tool for accounts"
 
 
 def test_add_account_tool_schema_type_enum_matches_account_types(client):
@@ -677,6 +711,36 @@ def test_chat_update_account_balance_sets_refresh_true_and_updates_db(client, fa
 
     first_call = fake_llm.calls[0]
     assert "Net worth snapshot" in first_call["context_text"]
+
+
+def test_chat_delete_account_sets_refresh_true_and_removes_row(client, fake_llm):
+    login_demo(client)
+    account_id = insert_account(DEMO_USER_ID, "HDFC Savings", "savings", 50000)
+
+    fake_llm.responses.append(tool_call_reply("delete_account", {"account_id": account_id}))
+    fake_llm.responses.append(text_reply("Your HDFC Savings account has been deleted."))
+
+    response = client.post("/api/chat", json={"message": "yes, delete it"})
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["refresh"] is True
+    assert get_account_by_id(account_id, DEMO_USER_ID) is None
+
+
+def test_chat_delete_account_cross_user_is_protected(client, fake_llm):
+    register_new_user(client)
+    other_id = new_user_id_for(client)
+    account_id = insert_account(other_id, "Other Savings", "savings", 1000)
+
+    login_demo(client)
+    fake_llm.responses.append(tool_call_reply("delete_account", {"account_id": account_id}))
+    fake_llm.responses.append(text_reply("I couldn't find that account."))
+
+    response = client.post("/api/chat", json={"message": "delete account %d" % account_id})
+
+    assert response.status_code == 200
+    assert get_account_by_id(account_id, other_id) is not None, "another user's account must survive"
 
 
 def test_chat_context_omits_net_worth_snapshot_when_no_accounts(client, fake_llm):
