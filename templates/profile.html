@@ -12,60 +12,92 @@
 
 {% block content %}
 
-<div class="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-3rem)]">
+<div class="dashboard-shell">
     {% include "_dashboard_sidebar.html" %}
 
-    <div class="flex-1 min-w-0 flex flex-col gap-5 py-6 px-6">
-        <div class="flex items-center gap-4 flex-wrap">
+    <div class="dashboard-main">
+        <header class="dashboard-header">
             <div>
-                <h1 class="font-display text-2xl text-ink">Hi, {{ user.name }} 👋</h1>
-                <p class="text-inkMuted text-sm">Track your expenses and transactions</p>
+                <h1 class="dashboard-greeting">Hi, {{ user.name }} 👋</h1>
+                <p class="dashboard-subline">{{ stats[1].value }} transactions · {{ stats[0].value }} out · {{ "All time" if active_preset == "all_time" else "selected range" }}</p>
             </div>
-            <div class="flex-1"></div>
-            <form action="{{ url_for('profile') }}" method="get" class="flex items-center">
-                <input type="hidden" name="date_from" value="{{ selected_from or '' }}">
-                <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
-                <input type="search" name="q" value="{{ search_query or '' }}"
-                       placeholder="Search expenses..." aria-label="Search expenses"
-                       class="w-48 md:w-64 rounded-lg border border-solid border-border bg-paperCard text-ink text-sm px-3 py-2 font-body">
+            <div class="dashboard-header-actions">
+                <button type="button" class="dashboard-search-button" aria-label="Search or jump to..." disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="dashboard-search-icon" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search or jump to…</span>
+                    <kbd class="dashboard-kbd">⌘K</kbd>
+                </button>
+                <button type="button" id="profile-add-expense-toggle" class="btn btn-primary">＋ Add expense</button>
+            </div>
+        </header>
+
+        <div class="assistant-bar">
+            <form id="profile-chat-quickstart-form" class="assistant-bar-row">
+                <span class="assistant-bar-mark" aria-hidden="true">◈</span>
+                <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
+                <input type="text" id="profile-chat-quickstart-input" class="assistant-bar-input"
+                       placeholder='Ask Spendly anything — "how much did I spend on food in August?"' autocomplete="off">
+                <button type="button" id="profile-chat-quickstart-attach-button" class="btn btn-ghost" aria-label="Attach a receipt image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="assistant-bar-icon" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    Scan receipt
+                </button>
+                <button type="submit" class="btn btn-primary">Ask</button>
             </form>
-            <span class="text-inkFaint text-xs" id="profile-dashboard-clock"></span>
-            <div class="w-9 h-9 rounded-full bg-accent text-paperCard flex items-center justify-center font-semibold">{{ user.initials }}</div>
+            <div class="assistant-bar-chips">
+                <button type="button" class="assistant-chip" data-question="What did I overspend on this month?">What did I overspend on this month?</button>
+                <button type="button" class="assistant-chip" data-question="Compare August to September">Compare August to September</button>
+                <button type="button" class="assistant-chip" data-question="Show every Bills transaction">Show every Bills transaction</button>
+                <button type="button" class="assistant-chip" data-question="Am I on track for the Kyoto trip?">Am I on track for the Kyoto trip?</button>
+            </div>
         </div>
 
-        <form id="profile-chat-quickstart-form" class="profile-balance-card flex items-center gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
-            <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
-            <button type="button" id="profile-chat-quickstart-attach-button" aria-label="Attach a receipt image"
-                    class="border border-solid border-border rounded-lg bg-paperCard text-ink px-2.5 py-2 cursor-pointer">📎</button>
-            <input type="text" id="profile-chat-quickstart-input"
-                   placeholder="Ask about your spending..." autocomplete="off"
-                   class="flex-1 rounded-lg border border-solid border-border bg-paper text-ink px-3 py-2 font-body">
-            <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-2 font-body cursor-pointer">Send</button>
-        </form>
-
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'this_month' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">This Month</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_3_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 3 Months</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_6_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 6 Months</a>
-                <a href="{{ url_for('profile', q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'all_time' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">All Time</a>
+        <div class="filter-row">
+            <div class="filter-pills">
+                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'this_month' %}filter-pill-active{% endif %}">This month</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'last_3_months' %}filter-pill-active{% endif %}">Last 3 months</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'last_6_months' %}filter-pill-active{% endif %}">Last 6 months</a>
+                <a href="{{ url_for('profile', q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'all_time' %}filter-pill-active{% endif %}">All time</a>
             </div>
-            <form action="{{ url_for('profile') }}" method="get" class="flex items-end gap-3">
+            <div class="filter-divider"></div>
+            <form action="{{ url_for('profile') }}" method="get" class="filter-range-form">
                 <input type="hidden" name="q" value="{{ search_query or '' }}">
-                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_from">From
-                    <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}"
-                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
-                </label>
-                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_to">To
-                    <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}"
-                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
-                </label>
-                <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-1.5 font-body cursor-pointer">Apply</button>
+                <input type="hidden" name="category" value="{{ drill_category or '' }}">
+                <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}" class="input">
+                <span class="filter-range-arrow">→</span>
+                <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}" class="input">
+                <button type="submit" class="btn btn-secondary">Apply</button>
             </form>
+        </div>
+
+        <div id="profile-add-expense-row" class="add-expense-row" hidden>
+            <label class="add-expense-field add-expense-field-description">
+                <span class="add-expense-label">Description</span>
+                <input type="text" id="profile-add-expense-description" class="input" placeholder="Description">
+            </label>
+            <label class="add-expense-field add-expense-field-amount">
+                <span class="add-expense-label">Amount ₹</span>
+                <input type="number" id="profile-add-expense-amount" class="input" step="0.01" min="0" placeholder="0.00">
+            </label>
+            <label class="add-expense-field add-expense-field-category">
+                <span class="add-expense-label">Category</span>
+                <select id="profile-add-expense-category" class="input">
+                    {% for c in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"] %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="add-expense-field add-expense-field-date">
+                <span class="add-expense-label">Date</span>
+                <input type="date" id="profile-add-expense-date" class="input">
+            </label>
+            <div class="add-expense-actions">
+                <button type="button" id="profile-add-expense-save" class="btn btn-primary">Save</button>
+                <button type="button" id="profile-add-expense-cancel" class="btn btn-secondary">Cancel</button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

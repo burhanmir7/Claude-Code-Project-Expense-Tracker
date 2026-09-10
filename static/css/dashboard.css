@@ -171,3 +171,256 @@
     font-size: 10.5px;
     color: var(--color-neutral-500);
 }
+
+/* ------------------------------------------------------------------ */
+/* Shell layout                                                        */
+/* ------------------------------------------------------------------ */
+
+.dashboard-shell {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.dashboard-main {
+    flex: 1;
+    min-width: 0;
+    padding: 22px 28px 64px;
+    max-width: 1320px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header                                                               */
+/* ------------------------------------------------------------------ */
+
+.dashboard-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.dashboard-greeting {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.dashboard-subline {
+    font-size: 13px;
+    color: var(--color-neutral-500);
+    margin: 4px 0 0;
+}
+
+.dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-search-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 210px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-neutral-500);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: not-allowed;
+}
+
+.dashboard-search-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.dashboard-search-button span {
+    flex: 1;
+    text-align: left;
+}
+
+.dashboard-kbd {
+    font-size: 10.5px;
+    padding: 1px 5px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-sm);
+    color: var(--color-neutral-500);
+}
+
+/* ------------------------------------------------------------------ */
+/* Assistant bar                                                        */
+/* ------------------------------------------------------------------ */
+
+.assistant-bar {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow 180ms;
+}
+
+.assistant-bar:focus-within {
+    box-shadow: var(--shadow-md);
+}
+
+.assistant-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.assistant-bar-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--color-accent);
+    border-radius: 50%;
+    color: var(--color-accent);
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.assistant-bar-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    padding: 6px 0;
+}
+
+.assistant-bar-input:focus-visible {
+    outline: none;
+}
+
+.assistant-bar-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.assistant-bar-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.assistant-chip {
+    border: 1px solid var(--color-divider);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-neutral-400);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 5px 12px;
+    cursor: pointer;
+}
+
+.assistant-chip:hover {
+    background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+    color: var(--color-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Filter row                                                           */
+/* ------------------------------------------------------------------ */
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--color-divider);
+    color: var(--color-neutral-400);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.filter-pill-active {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    color: var(--color-text);
+}
+
+.filter-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--color-divider);
+}
+
+.filter-range-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-range-arrow {
+    color: var(--color-neutral-500);
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Inline add-expense row                                               */
+/* ------------------------------------------------------------------ */
+
+.add-expense-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 14px 16px;
+}
+
+.add-expense-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.add-expense-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-neutral-500);
+}
+
+.add-expense-field-description { flex: 2; min-width: 150px; }
+.add-expense-field-amount { width: 120px; }
+.add-expense-field-category { width: 150px; }
+.add-expense-field-date { width: 150px; }
+
+.add-expense-actions {
+    display: flex;
+    gap: 8px;
+}
