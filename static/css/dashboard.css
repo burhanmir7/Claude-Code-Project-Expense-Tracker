@@ -402,6 +402,10 @@
     padding: 14px 16px;
 }
 
+.add-expense-row[hidden] {
+    display: none;
+}
+
 .add-expense-field {
     display: flex;
     flex-direction: column;
