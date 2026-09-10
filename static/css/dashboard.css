@@ -581,3 +581,138 @@
     color: var(--color-neutral-500);
     font-variant-numeric: tabular-nums;
 }
+
+/* ------------------------------------------------------------------ */
+/* Charts                                                               */
+/* ------------------------------------------------------------------ */
+
+.charts-row {
+    display: grid;
+    grid-template-columns: minmax(340px, 1.5fr) minmax(280px, 1fr);
+    gap: 14px;
+}
+
+.chart-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 16px 18px;
+}
+
+.chart-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.chart-card-header h2 {
+    font-size: 15px;
+    margin: 0;
+}
+
+.chart-card-meta {
+    font-size: 12px;
+    color: var(--color-neutral-500);
+}
+
+.chart-card-hint {
+    font-size: 11.5px;
+    color: var(--color-neutral-500);
+}
+
+.chart-svg-container svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.chart-bar {
+    fill: var(--color-accent-700);
+    transition: fill 150ms;
+}
+
+.chart-bar-outside-range {
+    fill: var(--color-neutral-800);
+}
+
+.chart-bar:hover {
+    fill: var(--color-accent);
+}
+
+.chart-grid-line {
+    stroke: var(--color-divider);
+    stroke-width: 1;
+}
+
+.chart-bar-label {
+    font-size: 11px;
+    fill: var(--color-neutral-500);
+}
+
+.donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.donut-slice {
+    transition: opacity 150ms;
+    cursor: pointer;
+}
+
+.donut-slice-dimmed {
+    opacity: 0.28;
+}
+
+.donut-center-text {
+    font-size: 15px;
+    font-weight: 600;
+    fill: var(--color-text);
+}
+
+.donut-center-label {
+    font-size: 10px;
+    fill: var(--color-neutral-500);
+}
+
+.donut-legend {
+    min-width: 132px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.donut-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-neutral-500);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    font-family: var(--font-body);
+    padding: 0;
+}
+
+.donut-legend-row-dimmed {
+    color: var(--color-neutral-600);
+}
+
+.donut-legend-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.donut-legend-name {
+    flex: 1;
+    text-align: left;
+    color: var(--color-text);
+}
+
+.donut-legend-pct {
+    color: var(--color-neutral-500);
+}

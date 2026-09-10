@@ -203,16 +203,20 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-1">Monthly spending</h2>
-                <p class="text-sm text-inkMuted mb-2">{{ stats[1].value }} transactions this range</p>
-                <canvas id="monthly-chart" data-monthly="{{ monthly_totals | tojson | forceescape }}"></canvas>
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Monthly spending</h2>
+                    <span class="chart-card-meta" id="monthly-chart-meta">Six months · {{ stats[0].value }}</span>
+                </div>
+                <div id="monthly-chart" class="chart-svg-container" data-monthly="{{ monthly_totals | tojson | forceescape }}"></div>
             </div>
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-1">Category breakdown</h2>
-                <p class="text-sm text-inkMuted mb-2">Top: {{ stats[2].value }}</p>
-                <canvas id="category-chart" data-categories="{{ category_breakdown | tojson | forceescape }}"></canvas>
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Where it goes</h2>
+                    <span class="chart-card-hint">Click a slice to filter the ledger</span>
+                </div>
+                <div id="category-chart" class="chart-svg-container" data-categories="{{ category_breakdown | tojson | forceescape }}"></div>
             </div>
         </div>
 
