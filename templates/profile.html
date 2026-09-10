@@ -220,60 +220,138 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4">
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-3">Recent transactions</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Date</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Description</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Category</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Amount</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for t in transactions %}
-                            <tr class="hover:bg-paperWarm">
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.date }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.description }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft"><span class="category-badge category-badge-{{ t.category|lower }}">{{ t.category }}</span></td>
-                                <td class="px-3 py-2.5 text-sm text-right font-semibold text-ink border-b border-solid border-borderSoft" style="font-variant-numeric: tabular-nums;">{{ t.amount }}</td>
-                                <td class="px-3 py-2.5 text-right border-b border-solid border-borderSoft">
-                                    <a href="{{ url_for('edit_expense', id=t.id) }}" aria-label="Edit expense" class="inline-flex w-4 h-4 text-inkMuted hover:text-accent">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M12 20h9"></path>
-                                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                                        </svg>
-                                    </a>
-                                    <form method="POST" action="{{ url_for('delete_expense', id=t.id) }}" class="inline-flex ml-2" onsubmit="return confirm('Delete this expense?')">
-                                        <button type="submit" aria-label="Delete expense" class="inline-flex w-4 h-4 text-inkMuted hover:text-danger bg-transparent border-0 p-0 cursor-pointer">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                <path d="M10 11v6"></path>
-                                                <path d="M14 11v6"></path>
-                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-inkFaint py-6">No transactions in this date range.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+        <div class="insights-row">
+            {% for insight in insights %}
+            <div class="insight-card">
+                <span class="insight-icon" aria-hidden="true">{{ insight.icon | safe }}</span>
+                <p class="insight-title">{{ insight.title }}</p>
+                <p class="insight-body">{{ insight.body }}</p>
             </div>
+            {% else %}
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Top category</p>
+                <p class="insight-body">Insights are computed once you have spending in more than one category.</p>
+            </div>
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Budget headroom</p>
+                <p class="insight-body">Set up a budget to see how much headroom you have left this month.</p>
+            </div>
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Upcoming renewals</p>
+                <p class="insight-body">Recurring-expense tracking is coming in a future update.</p>
+            </div>
+            {% endfor %}
+        </div>
 
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm opacity-55" aria-disabled="true">
-                <h2 class="font-display text-lg text-ink mb-3 flex items-center gap-2">Bills &amp; Subscriptions <span class="text-[0.65rem] uppercase border border-solid border-border rounded-sm px-1.5 py-0.5 font-body">Soon</span></h2>
-                <p class="text-center text-inkFaint py-6">Coming in a future update.</p>
+        <div class="budgets-goals-row">
+            <div class="panel-card">
+                <h2>Budgets</h2>
+                {% if budgets %}
+                <div class="budgets-grid">
+                    {% for b in budgets %}
+                    <div class="budget-ring">
+                        <span class="budget-ring-name">{{ b.category }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="panel-empty">No budgets set yet — coming soon.</p>
+                {% endif %}
+            </div>
+            <div class="panel-card">
+                <h2>Goals</h2>
+                {% if goals %}
+                <div class="goals-list">
+                    {% for g in goals %}
+                    <div class="goal-row">
+                        <span class="goal-name">{{ g.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="panel-empty">No goals yet — coming soon.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="ledger-card">
+            <div class="ledger-header">
+                <h2>Ledger</h2>
+                {% if drill_category %}
+                <a href="{{ url_for('profile', date_from=selected_from, date_to=selected_to, q=search_query) }}" class="tag tag-accent ledger-drill-chip">
+                    {{ drill_category }} <span aria-hidden="true">✕</span>
+                </a>
+                {% endif %}
+                <form action="{{ url_for('profile') }}" method="get" class="ledger-search-form">
+                    <input type="hidden" name="date_from" value="{{ selected_from or '' }}">
+                    <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
+                    <input type="hidden" name="category" value="{{ drill_category or '' }}">
+                    <input type="search" name="q" id="profile-ledger-search-input" value="{{ search_query or '' }}"
+                           placeholder="Filter the ledger..." aria-label="Filter the ledger" class="input ledger-search-input">
+                </form>
+                <span class="ledger-count">{{ transactions|length }} shown</span>
+            </div>
+            <div class="ledger-table-wrap">
+                <table class="table ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th class="ledger-col-amount">Amount</th>
+                            <th class="ledger-col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        {% set next_category = None if drill_category == t.category else t.category %}
+                        <tr>
+                            <td class="ledger-col-date">{{ t.date }}</td>
+                            <td>{{ t.description }}</td>
+                            <td>
+                                <a href="{{ url_for('profile', date_from=selected_from, date_to=selected_to, q=search_query, category=next_category) }}"
+                                   class="ledger-category-pill"
+                                   style="border-color: var(--cat-{{ t.category|lower }}); color: var(--cat-{{ t.category|lower }}-text);">{{ t.category }}</a>
+                            </td>
+                            <td class="ledger-col-amount">{{ t.amount }}</td>
+                            <td class="ledger-col-actions">
+                                <a href="{{ url_for('edit_expense', id=t.id) }}" aria-label="Edit expense" class="ledger-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                    </svg>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_expense', id=t.id) }}" class="ledger-delete-form" onsubmit="return confirm('Delete this expense?')">
+                                    <button type="submit" aria-label="Delete expense" class="ledger-action-icon ledger-delete-button">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="ledger-empty">
+                                    {% if search_query %}
+                                    <p class="ledger-empty-title">Nothing matches "{{ search_query }}"</p>
+                                    <p class="ledger-empty-body">Try a shorter word, or widen the date range — the ledger holds transactions in total.</p>
+                                    {% else %}
+                                    <p class="ledger-empty-title">No expenses in this range</p>
+                                    <p class="ledger-empty-body">Widen the range or add the first expense for these dates.</p>
+                                    {% endif %}
+                                    <a href="{{ url_for('profile') }}" class="btn btn-secondary">Clear filters</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
