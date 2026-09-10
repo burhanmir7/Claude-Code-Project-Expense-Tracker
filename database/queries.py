@@ -53,9 +53,15 @@ def get_summary_stats(user_id, date_from=None, date_to=None):
     }
 
 
-def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
+def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None, search=None):
     conn = get_db()
     where, params = _user_date_filter(user_id, date_from, date_to)
+
+    if search:
+        where += " AND (description LIKE ? OR category LIKE ?)"
+        term = "%" + search + "%"
+        params += [term, term]
+
     params.append(limit)
 
     rows = conn.execute(

@@ -202,6 +202,8 @@ def profile():
         {"label": "Top category", "value": stats_raw["top_category"], "note": "", "icon": "tag"},
     ]
 
+    search_query = request.args.get("q", "").strip()
+
     transactions = [
         {
             "id": t["id"],
@@ -210,7 +212,7 @@ def profile():
             "category": t["category"],
             "amount": f"₹{t['amount']:,.2f}",
         }
-        for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)
+        for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to, search=search_query or None)
     ]
 
     monthly_totals = get_monthly_totals(user_id)
@@ -233,6 +235,7 @@ def profile():
         "profile.html", user=user, stats=stats,
         transactions=transactions,
         selected_from=date_from, selected_to=date_to,
+        search_query=search_query,
         active_preset=active_preset, preset_ranges=preset_ranges,
         monthly_totals=monthly_totals,
         category_breakdown=category_breakdown, hide_chrome=True,
