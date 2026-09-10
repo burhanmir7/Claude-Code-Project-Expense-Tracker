@@ -1,0 +1,21 @@
+/* ------------------------------------------------------------------ */
+/* Category color tokens (scoped to the dashboard page)                */
+/* Matches database/db.py CATEGORIES exactly.                          */
+/* ------------------------------------------------------------------ */
+
+:root {
+    --cat-food: var(--color-accent-300);
+    --cat-food-text: var(--color-accent-200);
+    --cat-transport: var(--color-accent-400);
+    --cat-transport-text: var(--color-accent-200);
+    --cat-bills: var(--color-accent-500);
+    --cat-bills-text: var(--color-accent-300);
+    --cat-health: var(--color-accent-600);
+    --cat-health-text: var(--color-accent-300);
+    --cat-entertainment: var(--color-accent-700);
+    --cat-entertainment-text: var(--color-accent-300);
+    --cat-shopping: var(--color-neutral-500);
+    --cat-shopping-text: var(--color-neutral-300);
+    --cat-other: var(--color-neutral-700);
+    --cat-other-text: var(--color-neutral-300);
+}
