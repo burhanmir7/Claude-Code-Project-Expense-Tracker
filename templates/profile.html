@@ -3,242 +3,355 @@
 {% block title %}Your Profile — Spendly{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nocturne.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div class="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-3rem)]">
+<div class="dashboard-shell">
     {% include "_dashboard_sidebar.html" %}
 
-    <div class="flex-1 min-w-0 flex flex-col gap-5 py-6 px-6">
-        <div class="flex items-center gap-4 flex-wrap">
+    <div class="dashboard-main">
+        <header class="dashboard-header">
             <div>
-                <h1 class="font-display text-2xl text-ink">Hi, {{ user.name }} 👋</h1>
-                <p class="text-inkMuted text-sm">Track your expenses and transactions</p>
+                <h1 class="dashboard-greeting">Hi, {{ user.name }} 👋</h1>
+                <p class="dashboard-subline">{{ stats[1].value }} transactions · {{ stats[0].value }} out · {{ "All time" if active_preset == "all_time" else "selected range" }}</p>
             </div>
-            <div class="flex-1"></div>
-            <form action="{{ url_for('profile') }}" method="get" class="flex items-center">
-                <input type="hidden" name="date_from" value="{{ selected_from or '' }}">
-                <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
-                <input type="search" name="q" value="{{ search_query or '' }}"
-                       placeholder="Search expenses..." aria-label="Search expenses"
-                       class="w-48 md:w-64 rounded-lg border border-solid border-border bg-paperCard text-ink text-sm px-3 py-2 font-body">
+            <div class="dashboard-header-actions">
+                <button type="button" class="dashboard-search-button" aria-label="Search or jump to..." disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="dashboard-search-icon" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search or jump to…</span>
+                    <kbd class="dashboard-kbd">⌘K</kbd>
+                </button>
+                <button type="button" id="profile-add-expense-toggle" class="btn btn-primary">＋ Add expense</button>
+            </div>
+        </header>
+
+        <div class="assistant-bar">
+            <form id="profile-chat-quickstart-form" class="assistant-bar-row">
+                <span class="assistant-bar-mark" aria-hidden="true">◈</span>
+                <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
+                <input type="text" id="profile-chat-quickstart-input" class="assistant-bar-input"
+                       placeholder='Ask Spendly anything — "how much did I spend on food in August?"' autocomplete="off">
+                <button type="button" id="profile-chat-quickstart-attach-button" class="btn btn-ghost" aria-label="Attach a receipt image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="assistant-bar-icon" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    Scan receipt
+                </button>
+                <button type="submit" class="btn btn-primary">Ask</button>
             </form>
-            <span class="text-inkFaint text-xs" id="profile-dashboard-clock"></span>
-            <div class="w-9 h-9 rounded-full bg-accent text-paperCard flex items-center justify-center font-semibold">{{ user.initials }}</div>
+            <div class="assistant-bar-chips">
+                <button type="button" class="assistant-chip" data-question="What did I overspend on this month?">What did I overspend on this month?</button>
+                <button type="button" class="assistant-chip" data-question="Compare August to September">Compare August to September</button>
+                <button type="button" class="assistant-chip" data-question="Show every Bills transaction">Show every Bills transaction</button>
+                <button type="button" class="assistant-chip" data-question="Am I on track for the Kyoto trip?">Am I on track for the Kyoto trip?</button>
+            </div>
         </div>
 
-        <form id="profile-chat-quickstart-form" class="profile-balance-card flex items-center gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
-            <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
-            <button type="button" id="profile-chat-quickstart-attach-button" aria-label="Attach a receipt image"
-                    class="border border-solid border-border rounded-lg bg-paperCard text-ink px-2.5 py-2 cursor-pointer">📎</button>
-            <input type="text" id="profile-chat-quickstart-input"
-                   placeholder="Ask about your spending..." autocomplete="off"
-                   class="flex-1 rounded-lg border border-solid border-border bg-paper text-ink px-3 py-2 font-body">
-            <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-2 font-body cursor-pointer">Send</button>
-        </form>
-
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'this_month' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">This Month</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_3_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 3 Months</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_6_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 6 Months</a>
-                <a href="{{ url_for('profile', q=search_query) }}"
-                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'all_time' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">All Time</a>
+        <div class="filter-row">
+            <div class="filter-pills">
+                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'this_month' %}filter-pill-active{% endif %}">This month</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'last_3_months' %}filter-pill-active{% endif %}">Last 3 months</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'last_6_months' %}filter-pill-active{% endif %}">Last 6 months</a>
+                <a href="{{ url_for('profile', q=search_query, category=drill_category) }}"
+                   class="filter-pill {% if active_preset == 'all_time' %}filter-pill-active{% endif %}">All time</a>
             </div>
-            <form action="{{ url_for('profile') }}" method="get" class="flex items-end gap-3">
+            <div class="filter-divider"></div>
+            <form action="{{ url_for('profile') }}" method="get" class="filter-range-form">
                 <input type="hidden" name="q" value="{{ search_query or '' }}">
-                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_from">From
-                    <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}"
-                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
-                </label>
-                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_to">To
-                    <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}"
-                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
-                </label>
-                <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-1.5 font-body cursor-pointer">Apply</button>
+                <input type="hidden" name="category" value="{{ drill_category or '' }}">
+                <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}" class="input">
+                <span class="filter-range-arrow">→</span>
+                <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}" class="input">
+                <button type="submit" class="btn btn-secondary">Apply</button>
             </form>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="profile-balance-card rounded-2xl p-4 bg-paperCard shadow-sm flex flex-col gap-2.5" data-accounts="{{ accounts | tojson | forceescape }}">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-lg bg-accentLight text-accent flex items-center justify-center shrink-0" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 10h20"></path><circle cx="16.5" cy="14.5" r="1.25" fill="currentColor" stroke="none"></circle></svg>
-                    </span>
-                    <span class="text-sm text-inkMuted flex-1">Account Balance</span>
-                    <div class="relative">
-                        <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-balance-menu-toggle" aria-label="Account options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-balance-menu-dropdown" hidden>
-                            <a href="{{ url_for('add_account') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
-                            <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
-                        </div>
-                    </div>
-                </div>
+        <div id="profile-add-expense-row" class="add-expense-row" hidden>
+            <label class="add-expense-field add-expense-field-description">
+                <span class="add-expense-label">Description</span>
+                <input type="text" id="profile-add-expense-description" class="input" placeholder="Description" maxlength="200">
+            </label>
+            <label class="add-expense-field add-expense-field-amount">
+                <span class="add-expense-label">Amount ₹</span>
+                <input type="number" id="profile-add-expense-amount" class="input" step="0.01" min="0" placeholder="0.00">
+            </label>
+            <label class="add-expense-field add-expense-field-category">
+                <span class="add-expense-label">Category</span>
+                <select id="profile-add-expense-category" class="input">
+                    {% for c in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"] %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="add-expense-field add-expense-field-date">
+                <span class="add-expense-label">Date</span>
+                <input type="date" id="profile-add-expense-date" class="input">
+            </label>
+            <div class="add-expense-actions">
+                <button type="button" id="profile-add-expense-save" class="btn btn-primary">Save</button>
+                <button type="button" id="profile-add-expense-cancel" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
 
+        <div class="tiles-grid">
+            <div class="tile tile-networth">
+                <div class="tile-row">
+                    <span class="tile-icon tile-icon-networth" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                    </span>
+                    <span class="tile-eyebrow">Net worth</span>
+                </div>
+                <span class="tile-figure tile-figure-large {% if net_worth_is_negative %}tile-figure-negative{% endif %}">{{ net_worth }}</span>
+                <p class="tile-note">{{ net_worth_account_count }} account{{ "s" if net_worth_account_count != 1 else "" }}</p>
+                <svg class="tile-sparkline tile-sparkline-large" viewBox="0 0 320 64" aria-hidden="true">
+                    <polyline class="tile-sparkline-placeholder-line" points="0,32 320,32"></polyline>
+                </svg>
+            </div>
+
+            <div class="tile" data-accounts="{{ accounts | tojson | forceescape }}">
+                <div class="tile-row">
+                    <span class="tile-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 10h20"></path><circle cx="16.5" cy="14.5" r="1.25" fill="currentColor" stroke="none"></circle></svg>
+                    </span>
+                    <span class="tile-label">Account Balance</span>
+                    {% if accounts %}
+                    <button type="button" class="tile-caret" id="profile-balance-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Select account">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    {% endif %}
+                </div>
                 {% if accounts %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-balance-value">{{ total_balance }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-balance-select" aria-label="Select account">
-                    <option value="all">All Accounts</option>
+                <span class="tile-figure" id="profile-balance-value">{{ total_balance }}</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">{{ accounts|length }} account{{ "s" if accounts|length != 1 else "" }}</p>
+                <div class="tile-dropdown" id="profile-balance-dropdown" hidden>
+                    <button type="button" class="tile-dropdown-option" data-account-id="all"><span>All balance</span><span class="tile-dropdown-amount">{{ total_balance }}</span></button>
                     {% for a in accounts %}
-                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    <button type="button" class="tile-dropdown-option" data-account-id="{{ a.id }}"><span>{{ a.name }}</span><span class="tile-dropdown-amount">₹{{ "{:,.2f}".format(a.balance) }}</span></button>
                     {% endfor %}
-                </select>
+                </div>
                 {% else %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink">₹0.00</span>
-                <p class="text-xs text-inkFaint">No accounts yet. <a href="{{ url_for('add_account') }}" class="text-accent">Add one</a></p>
+                <span class="tile-figure">₹0.00</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">No accounts yet. <a href="{{ url_for('add_account') }}">Add one</a></p>
                 {% endif %}
             </div>
 
-            <div class="profile-balance-card rounded-2xl p-4 bg-paperCard shadow-sm flex flex-col gap-2.5" data-accounts="{{ debt_accounts | tojson | forceescape }}">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-lg bg-dangerLight text-danger flex items-center justify-center shrink-0" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect x="3" y="7" width="18" height="12" rx="2"></rect><path d="M3 11h18"></path><path d="M7 15h4"></path></svg>
+            <div class="tile" data-accounts="{{ debt_accounts | tojson | forceescape }}">
+                <div class="tile-row">
+                    <span class="tile-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"></rect><path d="M3 11h18"></path><path d="M7 15h4"></path></svg>
                     </span>
-                    <span class="text-sm text-inkMuted flex-1">Debt</span>
-                    <div class="relative">
-                        <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-debt-menu-toggle" aria-label="Debt options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-debt-menu-dropdown" hidden>
-                            <a href="{{ url_for('add_account', type='debt') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
-                            <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
-                        </div>
-                    </div>
+                    <span class="tile-label">Debt</span>
+                    {% if debt_accounts %}
+                    <button type="button" class="tile-caret" id="profile-debt-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Select debt account">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    {% endif %}
                 </div>
-
                 {% if debt_accounts %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-debt-value">{{ total_debt }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-debt-select" aria-label="Select debt account">
-                    <option value="all">All Debts</option>
+                <span class="tile-figure" id="profile-debt-value">{{ total_debt }}</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">{{ debt_accounts|length }} account{{ "s" if debt_accounts|length != 1 else "" }}</p>
+                <div class="tile-dropdown" id="profile-debt-dropdown" hidden>
+                    <button type="button" class="tile-dropdown-option" data-account-id="all"><span>All debt</span><span class="tile-dropdown-amount">{{ total_debt }}</span></button>
                     {% for a in debt_accounts %}
-                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    <button type="button" class="tile-dropdown-option" data-account-id="{{ a.id }}"><span>{{ a.name }}</span><span class="tile-dropdown-amount">₹{{ "{:,.2f}".format(a.balance) }}</span></button>
                     {% endfor %}
-                </select>
+                </div>
                 {% else %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink">₹0.00</span>
-                <p class="text-xs text-inkFaint">No debts yet. <a href="{{ url_for('add_account', type='debt') }}" class="text-accent">Add one</a></p>
+                <span class="tile-figure">₹0.00</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">No debts yet. <a href="{{ url_for('add_account', type='debt') }}">Add one</a></p>
                 {% endif %}
             </div>
 
-            <div class="profile-balance-card rounded-2xl p-4 bg-paperCard shadow-sm flex flex-col gap-2.5" data-accounts="{{ investment_accounts | tojson | forceescape }}">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-lg bg-accent2Light text-accent2 flex items-center justify-center shrink-0" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>
+            <div class="tile" data-accounts="{{ investment_accounts | tojson | forceescape }}">
+                <div class="tile-row">
+                    <span class="tile-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>
                     </span>
-                    <span class="text-sm text-inkMuted flex-1">Total Investment</span>
-                    <div class="relative">
-                        <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-investment-menu-toggle" aria-label="Investment options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-investment-menu-dropdown" hidden>
-                            <a href="{{ url_for('add_account', type='investment') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
-                            <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
-                        </div>
-                    </div>
+                    <span class="tile-label">Total Investment</span>
+                    {% if investment_accounts %}
+                    <button type="button" class="tile-caret" id="profile-investment-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Select investment">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    {% endif %}
                 </div>
-
                 {% if investment_accounts %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-investment-value">{{ total_investment }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-investment-select" aria-label="Select investment">
-                    <option value="all">All Investments</option>
+                <span class="tile-figure" id="profile-investment-value">{{ total_investment }}</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">{{ investment_accounts|length }} account{{ "s" if investment_accounts|length != 1 else "" }}</p>
+                <div class="tile-dropdown" id="profile-investment-dropdown" hidden>
+                    <button type="button" class="tile-dropdown-option" data-account-id="all"><span>All investments</span><span class="tile-dropdown-amount">{{ total_investment }}</span></button>
                     {% for a in investment_accounts %}
-                    <option value="{{ a.id }}">{{ a.name }}</option>
+                    <button type="button" class="tile-dropdown-option" data-account-id="{{ a.id }}"><span>{{ a.name }}</span><span class="tile-dropdown-amount">₹{{ "{:,.2f}".format(a.balance) }}</span></button>
                     {% endfor %}
-                </select>
+                </div>
                 {% else %}
-                <span class="profile-balance-value text-2xl font-semibold text-ink">₹0.00</span>
-                <p class="text-xs text-inkFaint">No investments yet. <a href="{{ url_for('add_account', type='investment') }}" class="text-accent">Add one</a></p>
+                <span class="tile-figure">₹0.00</span>
+                <svg class="tile-sparkline" viewBox="0 0 56 16" aria-hidden="true"><polyline class="tile-sparkline-placeholder-line" points="0,8 56,8"></polyline></svg>
+                <p class="tile-note">No investments yet. <a href="{{ url_for('add_account', type='investment') }}">Add one</a></p>
                 {% endif %}
             </div>
+        </div>
 
-            <div class="profile-balance-card rounded-2xl p-4 bg-paperCard shadow-sm flex flex-col gap-2.5">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-lg bg-accent3Light text-accent3 flex items-center justify-center shrink-0" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
-                    </span>
-                    <span class="text-sm text-inkMuted flex-1">Net Worth</span>
-                    <div class="relative">
-                        <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" aria-label="Net worth options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" hidden>
-                            <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
-                        </div>
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Monthly spending</h2>
+                    <span class="chart-card-meta" id="monthly-chart-meta">Six months · {{ stats[0].value }}</span>
+                </div>
+                <div id="monthly-chart" class="chart-svg-container" data-monthly="{{ monthly_totals | tojson | forceescape }}"></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Where it goes</h2>
+                    <span class="chart-card-hint">Click a slice to filter the ledger</span>
+                </div>
+                <div id="category-chart" class="chart-svg-container" data-categories="{{ category_breakdown | tojson | forceescape }}"></div>
+            </div>
+        </div>
+
+        <div class="insights-row">
+            {% for insight in insights %}
+            <div class="insight-card">
+                <span class="insight-icon" aria-hidden="true">{{ insight.icon | safe }}</span>
+                <p class="insight-title">{{ insight.title }}</p>
+                <p class="insight-body">{{ insight.body }}</p>
+            </div>
+            {% else %}
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Top category</p>
+                <p class="insight-body">Insights are computed once you have spending in more than one category.</p>
+            </div>
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Budget headroom</p>
+                <p class="insight-body">Set up a budget to see how much headroom you have left this month.</p>
+            </div>
+            <div class="insight-card insight-card-empty">
+                <p class="insight-title">Upcoming renewals</p>
+                <p class="insight-body">Recurring-expense tracking is coming in a future update.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="budgets-goals-row">
+            <div class="panel-card">
+                <h2>Budgets</h2>
+                {% if budgets %}
+                <div class="budgets-grid">
+                    {% for b in budgets %}
+                    <div class="budget-ring">
+                        <span class="budget-ring-name">{{ b.category }}</span>
                     </div>
+                    {% endfor %}
                 </div>
-
-                <span class="profile-balance-value text-2xl font-semibold {% if net_worth_is_negative %}text-danger{% else %}text-ink{% endif %}">{{ net_worth }}</span>
-                <p class="text-xs text-inkFaint">{{ net_worth_account_count }} account{{ "s" if net_worth_account_count != 1 else "" }}</p>
+                {% else %}
+                <p class="panel-empty">No budgets set yet — coming soon.</p>
+                {% endif %}
+            </div>
+            <div class="panel-card">
+                <h2>Goals</h2>
+                {% if goals %}
+                <div class="goals-list">
+                    {% for g in goals %}
+                    <div class="goal-row">
+                        <span class="goal-name">{{ g.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="panel-empty">No goals yet — coming soon.</p>
+                {% endif %}
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-1">Monthly spending</h2>
-                <p class="text-sm text-inkMuted mb-2">{{ stats[1].value }} transactions this range</p>
-                <canvas id="monthly-chart" data-monthly="{{ monthly_totals | tojson | forceescape }}"></canvas>
+        <div class="ledger-card">
+            <div class="ledger-header">
+                <h2>Ledger</h2>
+                {% if drill_category %}
+                <a href="{{ url_for('profile', date_from=selected_from, date_to=selected_to, q=search_query) }}" class="tag tag-accent ledger-drill-chip">
+                    {{ drill_category }} <span aria-hidden="true">✕</span>
+                </a>
+                {% endif %}
+                <form action="{{ url_for('profile') }}" method="get" class="ledger-search-form">
+                    <input type="hidden" name="date_from" value="{{ selected_from or '' }}">
+                    <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
+                    <input type="hidden" name="category" value="{{ drill_category or '' }}">
+                    <input type="search" name="q" id="profile-ledger-search-input" value="{{ search_query or '' }}"
+                           placeholder="Filter the ledger..." aria-label="Filter the ledger" class="input ledger-search-input">
+                </form>
+                <span class="ledger-count">{{ transactions|length }} shown</span>
             </div>
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-1">Category breakdown</h2>
-                <p class="text-sm text-inkMuted mb-2">Top: {{ stats[2].value }}</p>
-                <canvas id="category-chart" data-categories="{{ category_breakdown | tojson | forceescape }}"></canvas>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4">
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm">
-                <h2 class="font-display text-lg text-ink mb-3">Recent transactions</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Date</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Description</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Category</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Amount</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for t in transactions %}
-                            <tr class="hover:bg-paperWarm">
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.date }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.description }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft"><span class="category-badge category-badge-{{ t.category|lower }}">{{ t.category }}</span></td>
-                                <td class="px-3 py-2.5 text-sm text-right font-semibold text-ink border-b border-solid border-borderSoft" style="font-variant-numeric: tabular-nums;">{{ t.amount }}</td>
-                                <td class="px-3 py-2.5 text-right border-b border-solid border-borderSoft">
-                                    <a href="{{ url_for('edit_expense', id=t.id) }}" aria-label="Edit expense" class="inline-flex w-4 h-4 text-inkMuted hover:text-accent">
+            <div class="ledger-table-wrap">
+                <table class="table ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th class="ledger-col-amount">Amount</th>
+                            <th class="ledger-col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        {% set next_category = None if drill_category == t.category else t.category %}
+                        <tr>
+                            <td class="ledger-col-date">{{ t.date }}</td>
+                            <td>{{ t.description }}</td>
+                            <td>
+                                <a href="{{ url_for('profile', date_from=selected_from, date_to=selected_to, q=search_query, category=next_category) }}"
+                                   class="ledger-category-pill"
+                                   style="border-color: var(--cat-{{ t.category|lower }}); color: var(--cat-{{ t.category|lower }}-text);">{{ t.category }}</a>
+                            </td>
+                            <td class="ledger-col-amount">{{ t.amount }}</td>
+                            <td class="ledger-col-actions">
+                                <a href="{{ url_for('edit_expense', id=t.id) }}" aria-label="Edit expense" class="ledger-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                    </svg>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_expense', id=t.id) }}" class="ledger-delete-form" onsubmit="return confirm('Delete this expense?')">
+                                    <button type="submit" aria-label="Delete expense" class="ledger-action-icon ledger-delete-button">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M12 20h9"></path>
-                                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
                                         </svg>
-                                    </a>
-                                    <form method="POST" action="{{ url_for('delete_expense', id=t.id) }}" class="inline-flex ml-2" onsubmit="return confirm('Delete this expense?')">
-                                        <button type="submit" aria-label="Delete expense" class="inline-flex w-4 h-4 text-inkMuted hover:text-danger bg-transparent border-0 p-0 cursor-pointer">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                <path d="M10 11v6"></path>
-                                                <path d="M14 11v6"></path>
-                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-inkFaint py-6">No transactions in this date range.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="rounded-2xl p-4 bg-paperCard shadow-sm opacity-55" aria-disabled="true">
-                <h2 class="font-display text-lg text-ink mb-3 flex items-center gap-2">Bills &amp; Subscriptions <span class="text-[0.65rem] uppercase border border-solid border-border rounded-sm px-1.5 py-0.5 font-body">Soon</span></h2>
-                <p class="text-center text-inkFaint py-6">Coming in a future update.</p>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="ledger-empty">
+                                    {% if search_query %}
+                                    <p class="ledger-empty-title">Nothing matches "{{ search_query }}"</p>
+                                    <p class="ledger-empty-body">Try a shorter word, or widen the date range — the ledger holds transactions in total.</p>
+                                    {% else %}
+                                    <p class="ledger-empty-title">No expenses in this range</p>
+                                    <p class="ledger-empty-body">Widen the range or add the first expense for these dates.</p>
+                                    {% endif %}
+                                    <a href="{{ url_for('profile') }}" class="btn btn-secondary">Clear filters</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

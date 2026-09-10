@@ -117,9 +117,8 @@ def test_profile_authenticated_seed_user(client):
     assert "Bills" in body
     for category in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]:
         assert category in body
-    assert 'class="profile-sidebar ' in body
+    assert 'class="profile-sidebar"' in body
     assert "Dashboard" in body
-    assert "Soon" in body
     assert 'id="monthly-chart"' in body
     assert 'id="category-chart"' in body
 
