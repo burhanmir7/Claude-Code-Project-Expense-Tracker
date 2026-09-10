@@ -31,94 +31,63 @@
     }
 
     function formatRupees(amount) {
-        return "₹" + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return "₹" + amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function wireBalanceCard(card) {
-        var accounts = readJSON(card, "data-accounts");
-        var value = card.querySelector(".profile-balance-value");
-        var select = card.querySelector(".profile-balance-select");
+    function closeDropdown(toggle, dropdown) {
+        dropdown.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+    }
 
-        if (accounts && value && select) {
-            select.addEventListener("change", function () {
-                if (select.value === "all") {
-                    var total = accounts.reduce(function (sum, a) { return sum + a.balance; }, 0);
-                    value.textContent = formatRupees(total);
-                    return;
-                }
-                var selected = accounts.filter(function (a) { return String(a.id) === select.value; })[0];
-                value.textContent = formatRupees(selected ? selected.balance : 0);
-            });
+    function wireTile(tile) {
+        var accounts = readJSON(tile, "data-accounts");
+        var toggle = tile.querySelector(".tile-caret");
+        var dropdown = tile.querySelector(".tile-dropdown");
+        var figure = tile.querySelector(".tile-figure");
+        if (!accounts || !toggle || !dropdown || !figure) {
+            return;
         }
 
-        var menuToggle = card.querySelector(".profile-balance-menu-toggle");
-        var menuDropdown = card.querySelector(".profile-balance-menu-dropdown");
-        if (menuToggle && menuDropdown) {
-            menuToggle.addEventListener("click", function (event) {
+        toggle.addEventListener("click", function (event) {
+            event.stopPropagation();
+            var isOpen = !dropdown.hidden;
+            if (isOpen) {
+                closeDropdown(toggle, dropdown);
+            } else {
+                dropdown.hidden = false;
+                toggle.setAttribute("aria-expanded", "true");
+            }
+        });
+
+        document.addEventListener("click", function () {
+            closeDropdown(toggle, dropdown);
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeDropdown(toggle, dropdown);
+            }
+        });
+
+        var options = dropdown.querySelectorAll(".tile-dropdown-option");
+        for (var i = 0; i < options.length; i++) {
+            options[i].addEventListener("click", function (event) {
                 event.stopPropagation();
-                var isOpen = !menuDropdown.hidden;
-                menuDropdown.hidden = isOpen;
-                menuToggle.setAttribute("aria-expanded", String(!isOpen));
-            });
-            document.addEventListener("click", function () {
-                menuDropdown.hidden = true;
-                menuToggle.setAttribute("aria-expanded", "false");
+                var id = event.currentTarget.getAttribute("data-account-id");
+                if (id === "all") {
+                    var total = accounts.reduce(function (sum, a) { return sum + a.balance; }, 0);
+                    figure.textContent = formatRupees(total);
+                } else {
+                    var selected = accounts.filter(function (a) { return String(a.id) === id; })[0];
+                    figure.textContent = formatRupees(selected ? selected.balance : 0);
+                }
+                closeDropdown(toggle, dropdown);
             });
         }
     }
 
-    var balanceCards = document.querySelectorAll(".profile-balance-card");
-    for (var i = 0; i < balanceCards.length; i++) {
-        wireBalanceCard(balanceCards[i]);
-    }
-
-    if (typeof Chart === "undefined") {
-        return;
-    }
-
-    var monthlyCanvas = document.getElementById("monthly-chart");
-    var monthlyData = readJSON(monthlyCanvas, "data-monthly");
-    if (monthlyCanvas && monthlyData) {
-        new Chart(monthlyCanvas, {
-            type: "bar",
-            data: {
-                labels: monthlyData.map(function (row) { return monthLabel(row.month); }),
-                datasets: [{
-                    label: "Spending",
-                    data: monthlyData.map(function (row) { return row.total; }),
-                    backgroundColor: categoryColor("Food")
-                }]
-            },
-            options: {
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    var categoryCanvas = document.getElementById("category-chart");
-    var categoryData = readJSON(categoryCanvas, "data-categories");
-    if (categoryCanvas && categoryData && categoryData.length > 0) {
-        var ordered = CATEGORY_ORDER.filter(function (name) {
-            return categoryData.some(function (row) { return row.name === name; });
-        });
-        var amounts = ordered.map(function (name) {
-            var match = categoryData.filter(function (row) { return row.name === name; })[0];
-            return match ? match.amount : 0;
-        });
-
-        new Chart(categoryCanvas, {
-            type: "doughnut",
-            data: {
-                labels: ordered,
-                datasets: [{
-                    data: amounts,
-                    backgroundColor: ordered.map(categoryColor)
-                }]
-            },
-            options: {
-                plugins: { legend: { position: "bottom" } }
-            }
-        });
+    var tiles = document.querySelectorAll(".tile[data-accounts]");
+    for (var i = 0; i < tiles.length; i++) {
+        wireTile(tiles[i]);
     }
 })();

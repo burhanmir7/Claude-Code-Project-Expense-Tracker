@@ -611,7 +611,7 @@ def test_profile_with_accounts_shows_balance_card(client):
     assert "Account Balance" in body
     assert "HDFC Savings" in body
     assert "₹50,000.00" in body, "Account Balance is savings-only: debt and investment accounts have their own cards"
-    assert 'id="profile-balance-select"' in body
+    assert 'id="profile-balance-toggle"' in body
     assert 'href="/accounts"' in body, "Accounts nav link must be present on the sidebar layout"
 
 
@@ -630,7 +630,7 @@ def test_profile_with_debt_account_shows_debt_card(client):
     assert "Personal Loan" in body
     assert "₹40,000.00" in body, "Debt card is the raw sum of debt accounts only: 30000 + 10000"
     assert "₹50,000.00" in body, "Account Balance shows only the savings account, excluding debt"
-    assert 'id="profile-debt-select"' in body
+    assert 'id="profile-debt-toggle"' in body
 
 
 def test_profile_with_no_debt_accounts_shows_debt_empty_state(client):
@@ -642,7 +642,7 @@ def test_profile_with_no_debt_accounts_shows_debt_empty_state(client):
 
     assert response.status_code == 200
     assert "No debts yet." in body
-    assert 'id="profile-debt-select"' not in body, "the debt selector is omitted with zero debt accounts"
+    assert 'id="profile-debt-toggle"' not in body, "the debt selector is omitted with zero debt accounts"
 
 
 def test_profile_with_no_accounts_shows_empty_state(client):
@@ -654,7 +654,7 @@ def test_profile_with_no_accounts_shows_empty_state(client):
     assert response.status_code == 200
     assert "Account Balance" in body
     assert "No accounts yet." in body
-    assert 'id="profile-balance-select"' not in body, "the selector is omitted with zero accounts"
+    assert 'id="profile-balance-toggle"' not in body, "the selector is omitted with zero accounts"
 
 
 def test_profile_with_investment_account_shows_investment_card(client):
@@ -672,7 +672,7 @@ def test_profile_with_investment_account_shows_investment_card(client):
     assert "Index Fund" in body
     assert "₹35,000.00" in body, "Total Investment is the raw sum of investment accounts only: 20000 + 15000"
     assert "₹50,000.00" in body, "Account Balance shows only the savings account, excluding investments"
-    assert 'id="profile-investment-select"' in body
+    assert 'id="profile-investment-toggle"' in body
 
 
 def test_profile_with_no_investment_accounts_shows_investment_empty_state(client):
@@ -684,7 +684,7 @@ def test_profile_with_no_investment_accounts_shows_investment_empty_state(client
 
     assert response.status_code == 200
     assert "No investments yet." in body
-    assert 'id="profile-investment-select"' not in body, "the investment selector is omitted with zero investment accounts"
+    assert 'id="profile-investment-toggle"' not in body, "the investment selector is omitted with zero investment accounts"
 
 
 # ------------------------------------------------------------------ #
