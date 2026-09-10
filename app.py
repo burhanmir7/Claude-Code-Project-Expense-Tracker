@@ -8,6 +8,7 @@ from werkzeug.security import check_password_hash
 
 from ai import llm_client
 from ai.chat import HISTORY_LIMIT, run_chat_turn
+from ai.tools import is_mutating
 from ai.receipts import MAX_RECEIPT_BYTES, detect_image_type, extract_receipt, normalise_receipt
 from database.db import CATEGORIES, create_user, get_user_by_email, init_db, seed_db
 from database.queries import (
@@ -392,7 +393,8 @@ def chat_send():
     insert_chat_message(user_id, "user", text)
     insert_chat_message(user_id, "assistant", result["reply"])
 
-    return jsonify({"reply": result["reply"]})
+    refresh = any(is_mutating(name) for name in result["tools_used"])
+    return jsonify({"reply": result["reply"], "refresh": refresh})
 
 
 @app.route("/api/chat/history", methods=["DELETE"])

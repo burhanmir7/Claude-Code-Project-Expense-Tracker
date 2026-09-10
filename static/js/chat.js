@@ -248,6 +248,11 @@
                 setStatus("");
                 if (result.ok) {
                     appendBubble("assistant", result.data.reply);
+                    if (result.data.refresh) {
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 600);
+                    }
                 } else {
                     appendBubble("error", result.data.error || "Something went wrong.");
                 }

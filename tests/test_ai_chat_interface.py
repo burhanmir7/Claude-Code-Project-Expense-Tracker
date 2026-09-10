@@ -261,7 +261,7 @@ def test_chat_send_success_stores_both_turns(client, fake_llm):
     response = client.post("/api/chat", json={"message": "hi"})
 
     assert response.status_code == 200
-    assert response.get_json() == {"reply": "Sure"}
+    assert response.get_json() == {"reply": "Sure", "refresh": False}
 
     rows = get_chat_messages(1)
     assert [r["role"] for r in rows] == ["user", "assistant"]

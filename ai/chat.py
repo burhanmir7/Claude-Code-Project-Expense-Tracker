@@ -1,7 +1,9 @@
 from ai import llm_client
 from ai.prompts import CHAT_SYSTEM_PROMPT
+from ai.tools import execute_tool, get_tool_definitions
 
 HISTORY_LIMIT = 20
+MAX_TOOL_ROUNDS = 8
 
 CONTEXT_PROVIDERS = []
 
@@ -26,13 +28,46 @@ def build_turn_context(user_id, user_name, today):
 
 
 def run_chat_turn(user_id, history, user_text, user_name, today):
-    reply = llm_client.create_message(
-        system_text=CHAT_SYSTEM_PROMPT,
-        context_text=build_turn_context(user_id, user_name, today),
-        turns=build_messages(history, user_text),
-    )
+    turns = build_messages(history, user_text)
+    context_text = build_turn_context(user_id, user_name, today)
+    tools_used = []
+    rounds = 0
+    reply = None
 
-    if reply.finish_reason == "refused":
+    while True:
+        reply = llm_client.create_message(
+            system_text=CHAT_SYSTEM_PROMPT,
+            context_text=context_text,
+            turns=turns,
+            tools=get_tool_definitions(),
+        )
+
+        if reply.finish_reason != "tool_calls" or rounds >= MAX_TOOL_ROUNDS:
+            break
+
+        turns.append({
+            "role": "assistant",
+            "content": reply.text,
+            "tool_calls": [
+                {"id": c.id, "name": c.name, "input": dict(c.input)} for c in reply.tool_calls
+            ],
+        })
+
+        for call in reply.tool_calls:
+            content_json, is_error = execute_tool(call.name, dict(call.input), user_id)
+            turns.append({
+                "role": "tool_result",
+                "tool_call_id": call.id,
+                "content": content_json,
+                "is_error": is_error,
+            })
+            tools_used.append(call.name)
+
+        rounds += 1
+
+    if reply.finish_reason == "tool_calls" and rounds >= MAX_TOOL_ROUNDS:
+        text = "I couldn't finish that request. Please try a simpler instruction."
+    elif reply.finish_reason == "refused":
         text = "I can't help with that request."
     elif reply.finish_reason == "length":
         text = (reply.text or "") + " …"
@@ -41,4 +76,4 @@ def run_chat_turn(user_id, history, user_text, user_name, today):
     else:
         text = reply.text
 
-    return {"reply": text, "tools_used": []}
+    return {"reply": text, "tools_used": tools_used}
