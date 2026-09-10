@@ -428,101 +428,6 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Sidebar                                                              */
-/* ------------------------------------------------------------------ */
-
-.profile-sidebar {
-    flex: 0 0 220px;
-    padding: 1.5rem 1rem;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    min-height: 100vh;
-}
-
-.profile-sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    color: var(--ink);
-    padding: 0 0.5rem;
-}
-
-.profile-sidebar-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.profile-sidebar-heading {
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    padding: 0 0.5rem;
-    margin-bottom: 0.25rem;
-}
-
-.profile-sidebar-link {
-    display: block;
-    padding: 0.5rem 0.5rem;
-    border-radius: var(--radius-sm);
-    color: var(--ink-soft);
-    text-decoration: none;
-    font-size: 0.9rem;
-    border: none;
-    background: none;
-    text-align: left;
-    width: 100%;
-    cursor: pointer;
-    font-family: var(--font-body);
-}
-
-.profile-sidebar-link:not(.profile-sidebar-link-soon):hover,
-.profile-sidebar-link-active {
-    background: var(--accent-light);
-    color: var(--ink);
-}
-
-.profile-sidebar-link-soon {
-    color: var(--ink-faint);
-    cursor: not-allowed;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.profile-sidebar-soon {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.1rem 0.35rem;
-}
-
-.profile-sidebar-theme-toggle {
-    display: block;
-}
-
-.profile-sidebar-upgrade {
-    margin-top: auto;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-md);
-    padding: 0.75rem;
-    text-align: center;
-    color: var(--ink-faint);
-}
-
-.profile-sidebar-upgrade-title {
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-}
-
-/* ------------------------------------------------------------------ */
 /* Header                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -772,13 +677,6 @@
 @media (max-width: 900px) {
     .profile-dashboard-shell {
         flex-direction: column;
-    }
-
-    .profile-sidebar {
-        flex: none;
-        min-height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
     }
 
     .profile-kpi-row,
