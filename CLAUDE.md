@@ -62,7 +62,7 @@ spendly/
 
 - **Flask only** — no FastAPI, no Django, no other web frameworks
 - **SQLite only** — no PostgreSQL, no SQLAlchemy ORM, no external DB
-- **Vanilla JS only** — no React, no jQuery, no npm packages. The one named exception is Tailwind CDN (`https://cdn.tailwindcss.com`, loaded in `base.html`) for CSS utility classes — it ships no build step and no interactive behavior of its own; all interactivity remains hand-written vanilla JS
+- **Vanilla JS only** — no React, no jQuery, no npm packages. CSS is hand-written per page (see `static/css/<page>.css`) — no CSS framework
 - **No new pip packages** — work within `requirements.txt` as-is. The single sanctioned exception is `google-genai` (pinned in `requirements.txt`), used only by `ai/llm_client.py` for the Gemini free-tier API. Anything else must be flagged and approved first
 - Python 3.10+ assumed — f-strings and `match` statements are fine (the project venv is 3.14, so `imghdr` and other 3.13-removed modules are unavailable)
 

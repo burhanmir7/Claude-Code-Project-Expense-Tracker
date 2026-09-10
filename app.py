@@ -203,6 +203,8 @@ def profile():
     ]
 
     search_query = request.args.get("q", "").strip()
+    raw_category = request.args.get("category", "").strip()
+    drill_category = raw_category if raw_category in CATEGORIES else None
 
     transactions = [
         {
@@ -212,7 +214,10 @@ def profile():
             "category": t["category"],
             "amount": f"₹{t['amount']:,.2f}",
         }
-        for t in get_recent_transactions(user_id, date_from=date_from, date_to=date_to, search=search_query or None)
+        for t in get_recent_transactions(
+            user_id, date_from=date_from, date_to=date_to,
+            search=search_query or None, category=drill_category,
+        )
     ]
 
     monthly_totals = get_monthly_totals(user_id)
@@ -244,6 +249,8 @@ def profile():
         investment_accounts=investment_accounts, total_investment=total_investment,
         net_worth=net_worth, net_worth_is_negative=net_worth_is_negative,
         net_worth_account_count=net_worth_account_count,
+        drill_category=drill_category,
+        budgets=[], goals=[], insights=[],
     )
 
 
