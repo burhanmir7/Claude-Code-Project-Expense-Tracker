@@ -11,6 +11,45 @@
     {% if session.get('user_id') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
     {% endif %}
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            corePlugins: { preflight: false },
+            theme: {
+                extend: {
+                    colors: {
+                        paper: 'var(--paper)',
+                        paperWarm: 'var(--paper-warm)',
+                        paperCard: 'var(--paper-card)',
+                        ink: 'var(--ink)',
+                        inkSoft: 'var(--ink-soft)',
+                        inkMuted: 'var(--ink-muted)',
+                        inkFaint: 'var(--ink-faint)',
+                        accent: 'var(--accent)',
+                        accentLight: 'var(--accent-light)',
+                        accent2: 'var(--accent-2)',
+                        accent2Light: 'var(--accent-2-light)',
+                        accent3: 'var(--accent-3)',
+                        accent3Light: 'var(--accent-3-light)',
+                        danger: 'var(--danger)',
+                        dangerLight: 'var(--danger-light)',
+                        border: 'var(--border)',
+                        borderSoft: 'var(--border-soft)'
+                    },
+                    fontFamily: {
+                        display: ['DM Serif Display', 'Georgia', 'serif'],
+                        body: ['DM Sans', 'system-ui', 'sans-serif']
+                    },
+                    borderRadius: {
+                        sm: 'var(--radius-sm)',
+                        md: 'var(--radius-md)',
+                        lg: 'var(--radius-lg)'
+                    }
+                }
+            }
+        }
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body>

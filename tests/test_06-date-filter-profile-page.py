@@ -435,6 +435,86 @@ def test_get_recent_transactions_partial_date_args_behaves_as_unfiltered(client,
 
 
 # ------------------------------------------------------------------ #
+# GET /profile — transaction search (?q=)                             #
+# ------------------------------------------------------------------ #
+
+def test_search_matches_description_case_insensitive(client):
+    email = "search1@example.com"
+    register_new_user(client, name="Search One", email=email, password="pass1234")
+    uid = user_id_for(email)
+    insert_expense(uid, 40.00, "Food", date.today(), "Grocery run")
+    insert_expense(uid, 10.00, "Transport", date.today(), "Cab ride")
+
+    rows = get_recent_transactions(uid, search="grocery")
+
+    assert len(rows) == 1
+    assert rows[0]["description"] == "Grocery run"
+
+
+def test_search_matches_category(client):
+    email = "search2@example.com"
+    register_new_user(client, name="Search Two", email=email, password="pass1234")
+    uid = user_id_for(email)
+    insert_expense(uid, 40.00, "Food", date.today(), "Lunch")
+    insert_expense(uid, 10.00, "Transport", date.today(), "Cab ride")
+
+    rows = get_recent_transactions(uid, search="Food")
+
+    assert len(rows) == 1
+    assert rows[0]["category"] == "Food"
+
+
+def test_search_composes_with_date_range(client):
+    today = date.today()
+    email = "search3@example.com"
+    register_new_user(client, name="Search Three", email=email, password="pass1234")
+    uid = user_id_for(email)
+    insert_expense(uid, 40.00, "Food", today - timedelta(days=40), "Old grocery run")
+    insert_expense(uid, 10.00, "Food", today, "New grocery run")
+
+    rows = get_recent_transactions(
+        uid, search="grocery",
+        date_from=(today - timedelta(days=5)).isoformat(),
+        date_to=today.isoformat(),
+    )
+
+    assert len(rows) == 1
+    assert rows[0]["description"] == "New grocery run"
+
+
+def test_search_no_matches_returns_empty(client):
+    email = "search4@example.com"
+    register_new_user(client, name="Search Four", email=email, password="pass1234")
+    uid = user_id_for(email)
+    insert_expense(uid, 40.00, "Food", date.today(), "Lunch")
+
+    rows = get_recent_transactions(uid, search="zzzznomatch")
+
+    assert rows == []
+
+
+def test_search_absent_behaves_as_before(client):
+    email = "search5@example.com"
+    register_new_user(client, name="Search Five", email=email, password="pass1234")
+    uid = user_id_for(email)
+    insert_expense(uid, 40.00, "Food", date.today(), "Lunch")
+
+    rows = get_recent_transactions(uid)
+
+    assert len(rows) == 1
+
+
+def test_route_search_query_param_filters_table(client):
+    login_demo(client)
+    response = client.get("/profile?q=bills")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Electricity" in body
+    assert "Groceries" not in body
+
+
+# ------------------------------------------------------------------ #
 # get_category_breakdown — date-range behaviour                       #
 # ------------------------------------------------------------------ #
 
