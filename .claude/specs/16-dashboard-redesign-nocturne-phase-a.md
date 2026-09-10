@@ -318,7 +318,13 @@ replacement, not a preserve-everything rewrite).
 - [ ] Monthly and category charts are hand-drawn inline SVG; Chart.js is
       fully removed from the page and its CDN script tag deleted
 - [ ] Tile caret dropdowns, inline add-expense, ledger drill-down (server
-      round-trip), search, toast, and light/dark theme toggle all work
+      round-trip), search, and toast all work
+- [ ] The sidebar's theme toggle correctly flips the icon and affects chrome
+      outside the Nocturne-styled dashboard (e.g. the chat drawer) — the
+      dashboard's own Nocturne surfaces are intentionally dark-only in this
+      phase (no light-mode token override exists yet), per the
+      page-scoped-tokens decision; full light/dark parity for the dashboard
+      is future work
 - [ ] Assistant bar opens the existing chat drawer and submits typed text
       into the existing `/api/chat` flow, unmodified in appearance
 - [ ] Command palette button is present but inert (Sub-project B)
