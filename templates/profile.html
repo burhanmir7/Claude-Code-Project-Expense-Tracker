@@ -12,46 +12,55 @@
 <div class="profile-dashboard-shell">
     {% include "_dashboard_sidebar.html" %}
 
-    <div class="profile-dashboard-main">
-        <div class="profile-dashboard-header">
+    <div class="profile-dashboard-main flex-1 min-w-0 flex flex-col gap-5 py-6 px-6">
+        <div class="flex items-center gap-4 flex-wrap">
             <div>
-                <h1 class="profile-dashboard-greeting">Hi, {{ user.name }} 👋</h1>
-                <p class="profile-dashboard-subtitle">Track your expenses and transactions</p>
+                <h1 class="font-display text-2xl text-ink">Hi, {{ user.name }} 👋</h1>
+                <p class="text-inkMuted text-sm">Track your expenses and transactions</p>
             </div>
-            <div class="profile-dashboard-header-actions">
-                <span class="profile-dashboard-clock" id="profile-dashboard-clock"></span>
-                <div class="profile-dashboard-avatar">{{ user.initials }}</div>
-            </div>
+            <div class="flex-1"></div>
+            <form action="{{ url_for('profile') }}" method="get" class="flex items-center">
+                <input type="hidden" name="date_from" value="{{ selected_from or '' }}">
+                <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
+                <input type="search" name="q" value="{{ search_query or '' }}"
+                       placeholder="Search expenses..." aria-label="Search expenses"
+                       class="w-48 md:w-64 rounded-lg border border-border bg-paperCard text-ink text-sm px-3 py-2 font-body">
+            </form>
+            <span class="text-inkFaint text-xs" id="profile-dashboard-clock"></span>
+            <div class="w-9 h-9 rounded-full bg-accent text-paperCard flex items-center justify-center font-semibold">{{ user.initials }}</div>
         </div>
 
-        <form id="profile-chat-quickstart-form" class="profile-chat-quickstart">
+        <form id="profile-chat-quickstart-form" class="profile-balance-card flex items-center gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
             <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
-            <button type="button" id="profile-chat-quickstart-attach-button" class="profile-chat-quickstart-attach" aria-label="Attach a receipt image">📎</button>
-            <input type="text" id="profile-chat-quickstart-input" class="profile-chat-quickstart-input"
-                   placeholder="Ask about your spending..." autocomplete="off">
-            <button type="submit" class="profile-chat-quickstart-send">Send</button>
+            <button type="button" id="profile-chat-quickstart-attach-button" aria-label="Attach a receipt image"
+                    class="border border-border rounded-lg bg-paperCard text-ink px-2.5 py-2 cursor-pointer">📎</button>
+            <input type="text" id="profile-chat-quickstart-input"
+                   placeholder="Ask about your spending..." autocomplete="off"
+                   class="flex-1 rounded-lg border border-border bg-paper text-ink px-3 py-2 font-body">
+            <button type="submit" class="rounded-lg border border-border bg-accent text-paperCard px-4 py-2 font-body cursor-pointer">Send</button>
         </form>
 
-        <div class="profile-filterbar">
-            <div class="profile-filter-presets">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1]) }}"
-                   class="profile-filter-btn{% if active_preset == 'this_month' %} profile-filter-btn-active{% endif %}">This Month</a>
+                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'this_month' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">This Month</a>
                 <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1]) }}"
-                   class="profile-filter-btn{% if active_preset == 'last_3_months' %} profile-filter-btn-active{% endif %}">Last 3 Months</a>
+                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_3_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 3 Months</a>
                 <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1]) }}"
-                   class="profile-filter-btn{% if active_preset == 'last_6_months' %} profile-filter-btn-active{% endif %}">Last 6 Months</a>
+                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_6_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 6 Months</a>
                 <a href="{{ url_for('profile') }}"
-                   class="profile-filter-btn{% if active_preset == 'all_time' %} profile-filter-btn-active{% endif %}">All Time</a>
+                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'all_time' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">All Time</a>
             </div>
-            <form class="profile-filter-custom{% if active_preset is none and selected_from %} profile-filter-custom-active{% endif %}"
-                  action="{{ url_for('profile') }}" method="get">
-                <label class="profile-filter-label" for="date_from">From
-                    <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}">
+            <form action="{{ url_for('profile') }}" method="get" class="flex items-end gap-3">
+                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_from">From
+                    <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}"
+                           class="rounded-lg border border-border bg-paper text-ink px-2 py-1.5 font-body">
                 </label>
-                <label class="profile-filter-label" for="date_to">To
-                    <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}">
+                <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_to">To
+                    <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}"
+                           class="rounded-lg border border-border bg-paper text-ink px-2 py-1.5 font-body">
                 </label>
-                <button type="submit" class="profile-filter-apply">Apply</button>
+                <button type="submit" class="rounded-lg border border-border bg-accent text-paperCard px-4 py-1.5 font-body cursor-pointer">Apply</button>
             </form>
         </div>
 
