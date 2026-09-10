@@ -562,6 +562,10 @@
     flex-direction: column;
 }
 
+.tile-dropdown[hidden] {
+    display: none;
+}
+
 .tile-dropdown-option {
     display: flex;
     justify-content: space-between;

@@ -155,6 +155,9 @@
             svg.appendChild(svgEl("line", { x1: 0, x2: width, y1: y, y2: y, class: "chart-grid-line" }));
         }
 
+        var meta = document.getElementById("monthly-chart-meta");
+        var originalMetaText = meta ? meta.textContent : "";
+
         data.forEach(function (row, i) {
             var barHeight = (row.total / maxTotal) * 150;
             var x = i * gap + (gap - barWidth) / 2;
@@ -164,9 +167,13 @@
                 class: "chart-bar",
             });
             rect.addEventListener("mouseenter", function () {
-                var meta = document.getElementById("monthly-chart-meta");
                 if (meta) {
                     meta.textContent = monthLabel(row.month) + " · " + formatRupees(row.total);
+                }
+            });
+            rect.addEventListener("mouseleave", function () {
+                if (meta) {
+                    meta.textContent = originalMetaText;
                 }
             });
             svg.appendChild(rect);
@@ -372,13 +379,25 @@
             })
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("save failed");
+                        return response
+                            .json()
+                            .catch(function () {
+                                return null;
+                            })
+                            .then(function (data) {
+                                throw new Error(data && data.error ? data.error : "Could not save the expense.");
+                            });
                     }
-                    showToast("Expense added.");
-                    window.location.reload();
+                    return response;
                 })
-                .catch(function () {
-                    showToast("Could not save the expense.");
+                .then(function () {
+                    showToast("Expense added.");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 700);
+                })
+                .catch(function (err) {
+                    showToast(err && err.message ? err.message : "Could not save the expense.");
                 });
         });
     }
