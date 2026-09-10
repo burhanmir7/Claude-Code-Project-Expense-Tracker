@@ -201,7 +201,7 @@
         var slices = [];
 
         ordered.forEach(function (row) {
-            var sweep = (row.amount / total) * 360;
+            var sweep = Math.min((row.amount / total) * 360, 359.99);
             var startAngle = angle;
             var endAngle = angle + sweep;
             angle = endAngle;
