@@ -106,8 +106,9 @@ def test_route_category_param_does_not_affect_summary_or_breakdown(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert f"₹{unfiltered_stats['total_spent']:,.2f}" in body, (
-        "The route must not have passed category into get_summary_stats"
+    assert f"{unfiltered_stats['transaction_count']} transactions this range" in body, (
+        "The route must not have passed category into get_summary_stats "
+        "(transaction_count would drop to Bills-only otherwise)"
     )
     for row in unfiltered_breakdown:
         assert row["name"] in body, (
