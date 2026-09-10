@@ -24,7 +24,7 @@
                 <input type="hidden" name="date_to" value="{{ selected_to or '' }}">
                 <input type="search" name="q" value="{{ search_query or '' }}"
                        placeholder="Search expenses..." aria-label="Search expenses"
-                       class="w-48 md:w-64 rounded-lg border border-border bg-paperCard text-ink text-sm px-3 py-2 font-body">
+                       class="w-48 md:w-64 rounded-lg border border-solid border-border bg-paperCard text-ink text-sm px-3 py-2 font-body">
             </form>
             <span class="text-inkFaint text-xs" id="profile-dashboard-clock"></span>
             <div class="w-9 h-9 rounded-full bg-accent text-paperCard flex items-center justify-center font-semibold">{{ user.initials }}</div>
@@ -33,34 +33,35 @@
         <form id="profile-chat-quickstart-form" class="profile-balance-card flex items-center gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
             <input type="file" id="profile-chat-quickstart-attach" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
             <button type="button" id="profile-chat-quickstart-attach-button" aria-label="Attach a receipt image"
-                    class="border border-border rounded-lg bg-paperCard text-ink px-2.5 py-2 cursor-pointer">📎</button>
+                    class="border border-solid border-border rounded-lg bg-paperCard text-ink px-2.5 py-2 cursor-pointer">📎</button>
             <input type="text" id="profile-chat-quickstart-input"
                    placeholder="Ask about your spending..." autocomplete="off"
-                   class="flex-1 rounded-lg border border-border bg-paper text-ink px-3 py-2 font-body">
-            <button type="submit" class="rounded-lg border border-border bg-accent text-paperCard px-4 py-2 font-body cursor-pointer">Send</button>
+                   class="flex-1 rounded-lg border border-solid border-border bg-paper text-ink px-3 py-2 font-body">
+            <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-2 font-body cursor-pointer">Send</button>
         </form>
 
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 bg-paperCard shadow-sm">
             <div class="flex flex-wrap gap-2">
-                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1]) }}"
-                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'this_month' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">This Month</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1]) }}"
-                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_3_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 3 Months</a>
-                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1]) }}"
-                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_6_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 6 Months</a>
-                <a href="{{ url_for('profile') }}"
-                   class="rounded-lg border px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'all_time' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">All Time</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query) }}"
+                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'this_month' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">This Month</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query) }}"
+                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_3_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 3 Months</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query) }}"
+                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'last_6_months' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">Last 6 Months</a>
+                <a href="{{ url_for('profile', q=search_query) }}"
+                   class="rounded-lg border border-solid px-3.5 py-1.5 text-sm font-body no-underline {% if active_preset == 'all_time' %}bg-accentLight border-accent text-ink{% else %}border-border text-inkMuted bg-paper{% endif %}">All Time</a>
             </div>
             <form action="{{ url_for('profile') }}" method="get" class="flex items-end gap-3">
+                <input type="hidden" name="q" value="{{ search_query or '' }}">
                 <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_from">From
                     <input type="date" id="date_from" name="date_from" value="{{ selected_from or '' }}"
-                           class="rounded-lg border border-border bg-paper text-ink px-2 py-1.5 font-body">
+                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
                 </label>
                 <label class="flex flex-col text-xs text-inkFaint gap-1" for="date_to">To
                     <input type="date" id="date_to" name="date_to" value="{{ selected_to or '' }}"
-                           class="rounded-lg border border-border bg-paper text-ink px-2 py-1.5 font-body">
+                           class="rounded-lg border border-solid border-border bg-paper text-ink px-2 py-1.5 font-body">
                 </label>
-                <button type="submit" class="rounded-lg border border-border bg-accent text-paperCard px-4 py-1.5 font-body cursor-pointer">Apply</button>
+                <button type="submit" class="rounded-lg border border-solid border-border bg-accent text-paperCard px-4 py-1.5 font-body cursor-pointer">Apply</button>
             </form>
         </div>
 
@@ -73,7 +74,7 @@
                     <span class="text-sm text-inkMuted flex-1">Account Balance</span>
                     <div class="relative">
                         <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-balance-menu-toggle" aria-label="Account options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-balance-menu-dropdown" hidden>
+                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-balance-menu-dropdown" hidden>
                             <a href="{{ url_for('add_account') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
                             <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
                         </div>
@@ -82,7 +83,7 @@
 
                 {% if accounts %}
                 <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-balance-value">{{ total_balance }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-balance-select" aria-label="Select account">
+                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-balance-select" aria-label="Select account">
                     <option value="all">All Accounts</option>
                     {% for a in accounts %}
                     <option value="{{ a.id }}">{{ a.name }}</option>
@@ -102,7 +103,7 @@
                     <span class="text-sm text-inkMuted flex-1">Debt</span>
                     <div class="relative">
                         <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-debt-menu-toggle" aria-label="Debt options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-debt-menu-dropdown" hidden>
+                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-debt-menu-dropdown" hidden>
                             <a href="{{ url_for('add_account', type='debt') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
                             <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
                         </div>
@@ -111,7 +112,7 @@
 
                 {% if debt_accounts %}
                 <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-debt-value">{{ total_debt }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-debt-select" aria-label="Select debt account">
+                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-debt-select" aria-label="Select debt account">
                     <option value="all">All Debts</option>
                     {% for a in debt_accounts %}
                     <option value="{{ a.id }}">{{ a.name }}</option>
@@ -131,7 +132,7 @@
                     <span class="text-sm text-inkMuted flex-1">Total Investment</span>
                     <div class="relative">
                         <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" id="profile-investment-menu-toggle" aria-label="Investment options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-investment-menu-dropdown" hidden>
+                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" id="profile-investment-menu-dropdown" hidden>
                             <a href="{{ url_for('add_account', type='investment') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Add account</a>
                             <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
                         </div>
@@ -140,7 +141,7 @@
 
                 {% if investment_accounts %}
                 <span class="profile-balance-value text-2xl font-semibold text-ink" id="profile-investment-value">{{ total_investment }}</span>
-                <select class="profile-balance-select self-start rounded-lg border border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-investment-select" aria-label="Select investment">
+                <select class="profile-balance-select self-start rounded-lg border border-solid border-border bg-paper text-ink text-xs px-2 py-1.5 font-body" id="profile-investment-select" aria-label="Select investment">
                     <option value="all">All Investments</option>
                     {% for a in investment_accounts %}
                     <option value="{{ a.id }}">{{ a.name }}</option>
@@ -160,7 +161,7 @@
                     <span class="text-sm text-inkMuted flex-1">Net Worth</span>
                     <div class="relative">
                         <button type="button" class="profile-balance-menu-toggle bg-transparent border-0 text-inkMuted cursor-pointer px-1 leading-none" aria-label="Net worth options" aria-haspopup="true" aria-expanded="false">⋮</button>
-                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-border rounded-lg min-w-[140px] flex-col p-1.5" hidden>
+                        <div class="profile-balance-menu-dropdown flex absolute top-full right-0 z-10 bg-paperCard border border-solid border-border rounded-lg min-w-[140px] flex-col p-1.5" hidden>
                             <a href="{{ url_for('accounts') }}" class="block px-2 py-1.5 text-sm text-ink rounded-md hover:bg-paperWarm">Manage accounts</a>
                         </div>
                     </div>
@@ -191,21 +192,21 @@
                     <table class="w-full border-collapse">
                         <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-borderSoft">Date</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-borderSoft">Description</th>
-                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-borderSoft">Category</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-borderSoft">Amount</th>
-                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-borderSoft">Actions</th>
+                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Date</th>
+                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Description</th>
+                                <th class="px-3 py-2 text-left text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Category</th>
+                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Amount</th>
+                                <th class="px-3 py-2 text-right text-xs uppercase tracking-wide text-inkMuted border-b border-solid border-borderSoft">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for t in transactions %}
                             <tr class="hover:bg-paperWarm">
-                                <td class="px-3 py-2.5 text-sm border-b border-borderSoft">{{ t.date }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-borderSoft">{{ t.description }}</td>
-                                <td class="px-3 py-2.5 text-sm border-b border-borderSoft"><span class="category-badge category-badge-{{ t.category|lower }}">{{ t.category }}</span></td>
-                                <td class="px-3 py-2.5 text-sm text-right font-semibold text-ink border-b border-borderSoft" style="font-variant-numeric: tabular-nums;">{{ t.amount }}</td>
-                                <td class="px-3 py-2.5 text-right border-b border-borderSoft">
+                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.date }}</td>
+                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft">{{ t.description }}</td>
+                                <td class="px-3 py-2.5 text-sm border-b border-solid border-borderSoft"><span class="category-badge category-badge-{{ t.category|lower }}">{{ t.category }}</span></td>
+                                <td class="px-3 py-2.5 text-sm text-right font-semibold text-ink border-b border-solid border-borderSoft" style="font-variant-numeric: tabular-nums;">{{ t.amount }}</td>
+                                <td class="px-3 py-2.5 text-right border-b border-solid border-borderSoft">
                                     <a href="{{ url_for('edit_expense', id=t.id) }}" aria-label="Edit expense" class="inline-flex w-4 h-4 text-inkMuted hover:text-accent">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M12 20h9"></path>
@@ -236,7 +237,7 @@
             </div>
 
             <div class="rounded-2xl p-4 bg-paperCard shadow-sm opacity-55" aria-disabled="true">
-                <h2 class="font-display text-lg text-ink mb-3 flex items-center gap-2">Bills &amp; Subscriptions <span class="text-[0.65rem] uppercase border border-border rounded-sm px-1.5 py-0.5 font-body">Soon</span></h2>
+                <h2 class="font-display text-lg text-ink mb-3 flex items-center gap-2">Bills &amp; Subscriptions <span class="text-[0.65rem] uppercase border border-solid border-border rounded-sm px-1.5 py-0.5 font-body">Soon</span></h2>
                 <p class="text-center text-inkFaint py-6">Coming in a future update.</p>
             </div>
         </div>
