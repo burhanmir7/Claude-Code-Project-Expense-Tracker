@@ -1,5 +1,4 @@
 from datetime import date
-from types import SimpleNamespace
 
 import pytest
 
@@ -98,32 +97,20 @@ def test_create_message_raises_when_key_unset(monkeypatch):
         llm_client.create_message(system_text="You are a test assistant.", turns=[])
 
 
-def _candidate(reason):
-    return SimpleNamespace(finish_reason=SimpleNamespace(name=reason))
-
-
-def test_map_finish_reason_max_tokens_is_length():
-    candidate = _candidate("MAX_TOKENS")
-
-    assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "length"
+def test_map_finish_reason_length_is_length():
+    assert llm_client._map_finish_reason("length", has_tool_calls=False) == "length"
 
 
 def test_map_finish_reason_stop_is_stop():
-    candidate = _candidate("STOP")
-
-    assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "stop"
+    assert llm_client._map_finish_reason("stop", has_tool_calls=False) == "stop"
 
 
-def test_map_finish_reason_safety_is_refused():
-    candidate = _candidate("SAFETY")
-
-    assert llm_client._map_finish_reason(candidate, has_tool_calls=False) == "refused"
+def test_map_finish_reason_content_filter_is_refused():
+    assert llm_client._map_finish_reason("content_filter", has_tool_calls=False) == "refused"
 
 
 def test_map_finish_reason_tool_calls_takes_priority():
-    candidate = _candidate("STOP")
-
-    assert llm_client._map_finish_reason(candidate, has_tool_calls=True) == "tool_calls"
+    assert llm_client._map_finish_reason("stop", has_tool_calls=True) == "tool_calls"
 
 
 # ------------------------------------------------------------------ #

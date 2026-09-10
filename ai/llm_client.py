@@ -1,12 +1,11 @@
-import base64
+import json
 import logging
 import os
 
-from google import genai
-from google.genai import errors, types
+import groq
 
-CHAT_MODEL = "gemini-flash-lite-latest"
-EXTRACTION_MODEL = "gemini-flash-latest"
+CHAT_MODEL = "openai/gpt-oss-120b"
+EXTRACTION_MODEL = "qwen/qwen3.6-27b"
 CHAT_MAX_TOKENS = 4096
 EXTRACT_MAX_TOKENS = 1024
 REQUEST_TIMEOUT_SECONDS = 30.0
@@ -56,49 +55,93 @@ def get_client():
         api_key = os.environ.get("LLM_API_KEY")
         if not api_key:
             raise AIConfigError("The AI assistant is not configured. Set LLM_API_KEY to enable it.")
-        _client = genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(timeout=int(REQUEST_TIMEOUT_SECONDS * 1000)),
-        )
+        _client = groq.Groq(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS)
     return _client
 
 
-def _build_contents(turns, image):
-    contents = []
-    for turn in turns:
-        role = "model" if turn["role"] == "assistant" else "user"
-        contents.append(types.Content(role=role, parts=[types.Part.from_text(text=turn["content"])]))
+def _build_messages(system_instruction, turns, image):
+    messages = [{"role": "system", "content": system_instruction}]
+    turns = list(turns)
 
-    if image is not None and contents:
-        contents[-1].parts.append(
-            types.Part.from_bytes(data=base64.b64decode(image["data"]), mime_type=image["media_type"])
-        )
+    for i, turn in enumerate(turns):
+        if turn["role"] == "tool_result":
+            messages.append({
+                "role": "tool",
+                "tool_call_id": turn["tool_call_id"],
+                "content": turn["content"],
+            })
+            continue
 
-    return contents
+        if turn["role"] == "assistant" and turn.get("tool_calls"):
+            messages.append({
+                "role": "assistant",
+                "content": turn["content"] or None,
+                "tool_calls": [
+                    {
+                        "id": call["id"],
+                        "type": "function",
+                        "function": {
+                            "name": call["name"],
+                            "arguments": json.dumps(call["input"]),
+                        },
+                    }
+                    for call in turn["tool_calls"]
+                ],
+            })
+            continue
+
+        role = "assistant" if turn["role"] == "assistant" else "user"
+        if image is not None and i == len(turns) - 1 and role == "user":
+            messages.append({
+                "role": role,
+                "content": [
+                    {"type": "text", "text": turn["content"]},
+                    {"type": "image_url", "image_url": {
+                        "url": "data:%s;base64,%s" % (image["media_type"], image["data"]),
+                    }},
+                ],
+            })
+        else:
+            messages.append({"role": role, "content": turn["content"]})
+
+    return messages
 
 
 def _build_tools(tools):
     if not tools:
         return None
-    declarations = [
-        types.FunctionDeclaration(
-            name=tool["name"],
-            description=tool["description"],
-            parameters_json_schema=tool["input_schema"],
-        )
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": tool["name"],
+                "description": tool["description"],
+                "parameters": tool["input_schema"],
+            },
+        }
         for tool in tools
     ]
-    return [types.Tool(function_declarations=declarations)]
 
 
-def _map_finish_reason(candidate, has_tool_calls):
+def _build_response_format(response_schema):
+    if not response_schema:
+        return None
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "extraction",
+            "schema": response_schema,
+            "strict": True,
+        },
+    }
+
+
+def _map_finish_reason(finish_reason, has_tool_calls):
     if has_tool_calls:
         return "tool_calls"
-    finish_reason = getattr(candidate, "finish_reason", None)
-    reason = getattr(finish_reason, "name", finish_reason) or ""
-    if reason == "MAX_TOKENS":
+    if finish_reason == "length":
         return "length"
-    if reason in ("SAFETY", "RECITATION", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"):
+    if finish_reason == "content_filter":
         return "refused"
     return "stop"
 
@@ -113,48 +156,45 @@ def create_message(system_text, context_text="", turns=None, tools=None, respons
 
     model = EXTRACTION_MODEL if response_schema else CHAT_MODEL
 
-    config_kwargs = {
-        "system_instruction": system_instruction,
-        "max_output_tokens": EXTRACT_MAX_TOKENS if response_schema else CHAT_MAX_TOKENS,
+    request_kwargs = {
+        "model": model,
+        "messages": _build_messages(system_instruction, turns, image),
+        "max_completion_tokens": EXTRACT_MAX_TOKENS if response_schema else CHAT_MAX_TOKENS,
     }
 
     tool_config = _build_tools(tools)
     if tool_config:
-        config_kwargs["tools"] = tool_config
+        request_kwargs["tools"] = tool_config
 
-    if response_schema:
-        config_kwargs["response_mime_type"] = "application/json"
-        config_kwargs["response_json_schema"] = response_schema
+    response_format = _build_response_format(response_schema)
+    if response_format:
+        request_kwargs["response_format"] = response_format
 
     try:
-        response = client.models.generate_content(
-            model=model,
-            contents=_build_contents(turns, image),
-            config=types.GenerateContentConfig(**config_kwargs),
-        )
-    except errors.APIError as exc:
+        response = client.chat.completions.create(**request_kwargs)
+    except groq.APIStatusError as exc:
         logger.warning("LLM request failed: %s", type(exc).__name__)
-        if exc.code in (401, 403):
+        if exc.status_code in (401, 403):
             raise AIConfigError("The AI assistant is not configured. Set LLM_API_KEY to enable it.") from exc
-        if exc.code == 429:
+        if exc.status_code == 429:
             raise AIRateLimitError("The assistant is busy. Please try again in a moment.") from exc
         raise AIUnavailableError("The assistant is temporarily unavailable. Please try again.") from exc
     except Exception as exc:
         logger.warning("LLM request failed: %s", type(exc).__name__)
         raise AIUnavailableError("The assistant is temporarily unavailable. Please try again.") from exc
 
-    raw_calls = response.function_calls or []
-    tool_calls = [
-        _ToolCall(id="call_%d" % i, name=call.name, input=dict(call.args or {}))
-        for i, call in enumerate(raw_calls)
-    ]
+    message = response.choices[0].message
 
-    candidate = response.candidates[0] if response.candidates else None
-    finish_reason = _map_finish_reason(candidate, bool(tool_calls))
+    raw_calls = message.tool_calls or []
+    tool_calls = []
+    for call in raw_calls:
+        try:
+            args = json.loads(call.function.arguments or "{}")
+        except (ValueError, TypeError):
+            args = {}
+        tool_calls.append(_ToolCall(id=call.id, name=call.function.name, input=args))
 
-    try:
-        text = response.text or ""
-    except Exception:
-        text = ""
+    finish_reason = _map_finish_reason(response.choices[0].finish_reason, bool(tool_calls))
+    text = message.content or ""
 
     return _Reply(text=text, tool_calls=tool_calls, finish_reason=finish_reason)
