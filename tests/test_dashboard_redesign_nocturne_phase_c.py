@@ -17,7 +17,7 @@ from tests.conftest import register_new_user
 
 def login_demo(client):
     client.get("/logout")
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
 
 def user_id_for(email):

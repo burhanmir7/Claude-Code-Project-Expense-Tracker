@@ -25,7 +25,7 @@ def insert_expense(user_id, amount, category, expense_date, description="Test ex
 
 
 def login_demo(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
 
 # ------------------------------------------------------------------ #

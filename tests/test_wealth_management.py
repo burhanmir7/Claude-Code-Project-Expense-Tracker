@@ -25,7 +25,7 @@ DEMO_USER_ID = 1
 
 def login_demo(client):
     client.get("/logout")
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
 
 def new_user_id_for(client, email="new@example.com"):

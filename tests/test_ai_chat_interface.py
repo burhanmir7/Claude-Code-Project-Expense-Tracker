@@ -233,7 +233,7 @@ def test_chat_history_requires_auth(client):
 def test_chat_history_returns_stored_messages(client, monkeypatch):
     from database.queries import insert_chat_message
 
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     insert_chat_message(1, "user", "hi")
     insert_chat_message(1, "assistant", "hello")
 
@@ -256,7 +256,7 @@ def test_chat_send_success_stores_both_turns(client, fake_llm):
     from database.queries import get_chat_messages
 
     fake_llm.responses.append(text_reply("Sure"))
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "hi"})
 
@@ -270,7 +270,7 @@ def test_chat_send_success_stores_both_turns(client, fake_llm):
 
 
 def test_chat_send_blank_message(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "   "})
 
@@ -280,7 +280,7 @@ def test_chat_send_blank_message(client):
 
 
 def test_chat_send_too_long_message(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "x" * 2001})
 
@@ -291,7 +291,7 @@ def test_chat_send_too_long_message(client):
 
 def test_chat_send_at_max_length_succeeds(client, fake_llm):
     fake_llm.responses.append(text_reply("Sure"))
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "x" * 2000})
 
@@ -299,7 +299,7 @@ def test_chat_send_at_max_length_succeeds(client, fake_llm):
 
 
 def test_chat_send_non_string_message(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": 123})
 
@@ -310,7 +310,7 @@ def test_chat_send_non_string_message(client):
 
 
 def test_chat_send_json_array_body(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json=[1, 2])
 
@@ -321,7 +321,7 @@ def test_chat_send_json_array_body(client):
 
 
 def test_chat_send_non_json_body(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", data="not json", content_type="text/plain")
 
@@ -332,7 +332,7 @@ def test_chat_send_no_api_key_configured(client, monkeypatch):
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     from ai import llm_client
     llm_client._client = None
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "hi"})
 
@@ -343,7 +343,7 @@ def test_chat_send_no_api_key_configured(client, monkeypatch):
 
 def test_chat_send_unavailable_error(client, fake_llm):
     fake_llm.responses.append(AIUnavailableError("The assistant is temporarily unavailable. Please try again."))
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "hi"})
 
@@ -354,7 +354,7 @@ def test_chat_send_unavailable_error(client, fake_llm):
 
 def test_chat_send_rate_limit_error(client, fake_llm):
     fake_llm.responses.append(AIRateLimitError("The assistant is busy. Please try again in a moment."))
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat", json={"message": "hi"})
 
@@ -372,7 +372,7 @@ def test_chat_clear_requires_auth(client):
 def test_chat_clear_deletes_rows(client):
     from database.queries import insert_chat_message, get_chat_messages
 
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     insert_chat_message(1, "user", "a")
     insert_chat_message(1, "assistant", "b")
     insert_chat_message(1, "user", "c")
@@ -389,7 +389,7 @@ def test_chat_clear_deletes_rows(client):
 # ------------------------------------------------------------------ #
 
 def test_profile_includes_chat_drawer_when_logged_in(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.get("/profile")
     body = response.get_data(as_text=True)
@@ -400,7 +400,7 @@ def test_profile_includes_chat_drawer_when_logged_in(client):
 
 
 def test_profile_includes_chat_quickstart_field_when_logged_in(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.get("/profile")
     body = response.get_data(as_text=True)

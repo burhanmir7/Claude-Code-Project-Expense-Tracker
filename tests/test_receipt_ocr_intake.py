@@ -150,7 +150,7 @@ def test_chat_scan_receipt_requires_auth(client):
 
 
 def test_chat_scan_receipt_success_returns_expense_and_stores_chat_history(client, fake_llm):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     payload = {"is_receipt": True, "amount": 249.5, "date": "2026-09-01", "description": "Lunch", "category": "Food"}
     fake_llm.responses.append(text_reply(json.dumps(payload)))
 
@@ -169,7 +169,7 @@ def test_chat_scan_receipt_success_returns_expense_and_stores_chat_history(clien
 
 
 def test_chat_scan_receipt_no_file_returns_400_json(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/chat/receipt", data={}, content_type="multipart/form-data")
 
@@ -178,7 +178,7 @@ def test_chat_scan_receipt_no_file_returns_400_json(client):
 
 
 def test_chat_scan_receipt_wrong_type_returns_400_json(client, fake_llm):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = _upload_json(client, PDF_BYTES)
 
@@ -188,7 +188,7 @@ def test_chat_scan_receipt_wrong_type_returns_400_json(client, fake_llm):
 
 
 def test_chat_scan_receipt_not_a_receipt_returns_400_json(client, fake_llm):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     payload = {"is_receipt": False, "amount": None, "date": None, "description": None, "category": "Other"}
     fake_llm.responses.append(text_reply(json.dumps(payload)))
 
@@ -201,7 +201,7 @@ def test_chat_scan_receipt_not_a_receipt_returns_400_json(client, fake_llm):
 def test_chat_scan_receipt_no_api_key_returns_503_json(client, monkeypatch):
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     llm_client._client = None
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = _upload_json(client, PNG_BYTES)
 
@@ -218,7 +218,7 @@ def test_api_add_expense_requires_auth(client):
 def test_api_add_expense_success_creates_expense(client):
     from database.queries import get_summary_stats
 
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     before_count = get_summary_stats(1)["transaction_count"]
 
     response = client.post("/api/expenses", json={"amount": "249.50", "date": "2026-09-01", "description": "Lunch", "category": "Food"})
@@ -229,7 +229,7 @@ def test_api_add_expense_success_creates_expense(client):
 
 
 def test_api_add_expense_invalid_amount_returns_400(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/expenses", json={"amount": "not a number", "date": "2026-09-01", "description": "x", "category": "Food"})
 
@@ -237,7 +237,7 @@ def test_api_add_expense_invalid_amount_returns_400(client):
 
 
 def test_api_add_expense_non_finite_amount_returns_400(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     for bad_amount in ("nan", "inf", "-inf"):
         response = client.post("/api/expenses", json={"amount": bad_amount, "date": "2026-09-01", "description": "x", "category": "Food"})
@@ -245,7 +245,7 @@ def test_api_add_expense_non_finite_amount_returns_400(client):
 
 
 def test_api_add_expense_invalid_category_returns_400(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/expenses", json={"amount": "10.00", "date": "2026-09-01", "description": "x", "category": "Groceries"})
 
@@ -253,7 +253,7 @@ def test_api_add_expense_invalid_category_returns_400(client):
 
 
 def test_api_add_expense_invalid_date_returns_400(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/expenses", json={"amount": "10.00", "date": "not-a-date", "description": "x", "category": "Food"})
 
@@ -261,7 +261,7 @@ def test_api_add_expense_invalid_date_returns_400(client):
 
 
 def test_api_add_expense_description_too_long_returns_400(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.post("/api/expenses", json={"amount": "10.00", "date": "2026-09-01", "description": "x" * 201, "category": "Food"})
 
