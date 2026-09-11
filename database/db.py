@@ -1,9 +1,10 @@
+import os
 import sqlite3
 from datetime import date, timedelta
 
 from werkzeug.security import generate_password_hash
 
-DB_PATH = "expense_tracker.db"
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "expense_tracker.db")
 
 CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 ACCOUNT_TYPES = ["savings", "debt", "investment"]
