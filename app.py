@@ -11,7 +11,7 @@ from ai.chat import HISTORY_LIMIT, run_chat_turn
 from ai.insights import get_insights
 from ai.tools import is_mutating
 from ai.receipts import MAX_RECEIPT_BYTES, detect_image_type, extract_receipt, normalise_receipt
-from database.db import ACCOUNT_TYPES, CATEGORIES, create_user, get_user_by_email, init_db, seed_db
+from database.db import ACCOUNT_TYPES, CATEGORIES, create_user, get_user_by_email, init_db
 from database.queries import (
     contribute_to_goal,
     delete_account_by_id,
@@ -670,7 +670,6 @@ def api_contribute_to_goal(goal_id):
 
 with app.app_context():
     init_db()
-    seed_db()
 
 
 if __name__ == "__main__":
