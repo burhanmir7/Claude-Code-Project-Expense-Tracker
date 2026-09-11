@@ -86,7 +86,7 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
     where, params = _user_date_filter(user_id, date_from, date_to)
 
     rows = conn.execute(
-        "SELECT category AS name, SUM(amount) AS amount FROM expenses "
+        "SELECT category AS name, SUM(amount) AS amount, COUNT(*) AS count FROM expenses "
         f"{where} GROUP BY category ORDER BY amount DESC",
         params,
     ).fetchall()
@@ -97,7 +97,7 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
 
     total = sum(r["amount"] for r in rows)
     breakdown = [
-        {"name": r["name"], "amount": r["amount"], "pct": round(r["amount"] / total * 100)}
+        {"name": r["name"], "amount": r["amount"], "pct": round(r["amount"] / total * 100), "count": r["count"]}
         for r in rows
     ]
 
@@ -253,6 +253,7 @@ def insert_account(user_id, name, account_type, balance):
             (user_id, name, account_type, balance),
         )
         conn.commit()
+        _record_net_worth_snapshot(user_id)
         return cursor.lastrowid
     finally:
         conn.close()
@@ -267,6 +268,8 @@ def update_account(account_id, user_id, name, account_type, balance):
             (name, account_type, balance, account_id, user_id),
         )
         conn.commit()
+        if cursor.rowcount:
+            _record_net_worth_snapshot(user_id)
         return cursor.rowcount
     finally:
         conn.close()
@@ -280,6 +283,8 @@ def delete_account_by_id(account_id, user_id):
             (account_id, user_id),
         )
         conn.commit()
+        if cursor.rowcount:
+            _record_net_worth_snapshot(user_id)
         return cursor.rowcount
     finally:
         conn.close()
@@ -334,3 +339,157 @@ def get_monthly_totals(user_id, months=6):
     buckets.reverse()
 
     return [{"month": ym, "total": totals_by_month.get(ym, 0)} for ym in buckets]
+
+
+def get_budgets(user_id):
+    conn = get_db()
+    try:
+        month_prefix = date.today().strftime("%Y-%m")
+        rows = conn.execute(
+            "SELECT b.id, b.category, b.monthly_ceiling, "
+            "COALESCE((SELECT SUM(e.amount) FROM expenses e "
+            "WHERE e.user_id = b.user_id AND e.category = b.category "
+            "AND strftime('%Y-%m', e.date) = ?), 0) AS spent "
+            "FROM budgets b WHERE b.user_id = ? ORDER BY b.category",
+            (month_prefix, user_id),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    result = []
+    for r in rows:
+        ceiling = r["monthly_ceiling"]
+        pct_used = round(r["spent"] / ceiling * 100) if ceiling else 0
+        result.append({
+            "id": r["id"],
+            "category": r["category"],
+            "monthly_ceiling": ceiling,
+            "spent": r["spent"],
+            "pct_used": min(pct_used, 100),
+        })
+    return result
+
+
+def upsert_budget(user_id, category, monthly_ceiling):
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO budgets (user_id, category, monthly_ceiling) VALUES (?, ?, ?) "
+            "ON CONFLICT(user_id, category) DO UPDATE SET monthly_ceiling = excluded.monthly_ceiling",
+            (user_id, category, monthly_ceiling),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_budget(user_id, category):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM budgets WHERE user_id = ? AND category = ?",
+            (user_id, category),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
+def get_goals(user_id):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, name, target, saved FROM goals WHERE user_id = ? ORDER BY id",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    result = []
+    for r in rows:
+        target = r["target"]
+        pct = round(min(r["saved"] / target, 1) * 100) if target else 0
+        result.append({"id": r["id"], "name": r["name"], "target": target, "saved": r["saved"], "pct": pct})
+    return result
+
+
+def insert_goal(user_id, name, target, saved=0):
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO goals (user_id, name, target, saved) VALUES (?, ?, ?, ?)",
+            (user_id, name, target, saved),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
+def contribute_to_goal(goal_id, user_id, amount):
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, target, saved FROM goals WHERE id = ? AND user_id = ?",
+            (goal_id, user_id),
+        ).fetchone()
+        if row is None:
+            return None
+        new_saved = min(row["saved"] + amount, row["target"])
+        conn.execute("UPDATE goals SET saved = ? WHERE id = ?", (new_saved, row["id"]))
+        conn.commit()
+        return {"id": row["id"], "saved": new_saved, "target": row["target"]}
+    finally:
+        conn.close()
+
+
+def net_worth_series(user_id, months=6):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT month, net_worth FROM net_worth_snapshots WHERE user_id = ? ORDER BY month",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    snapshots_by_month = {r["month"]: r["net_worth"] for r in rows}
+
+    today = date.today()
+    year, month = today.year, today.month
+    buckets = []
+    for _ in range(months):
+        buckets.append("%04d-%02d" % (year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    buckets.reverse()
+
+    first_bucket = buckets[0]
+    earlier_months = sorted(m for m in snapshots_by_month if m <= first_bucket)
+    last_value = snapshots_by_month[earlier_months[-1]] if earlier_months else 0
+
+    series = []
+    for ym in buckets:
+        if ym in snapshots_by_month:
+            last_value = snapshots_by_month[ym]
+        series.append({"month": ym, "net_worth": last_value})
+    return series
+
+
+def _record_net_worth_snapshot(user_id):
+    net = get_net_worth(user_id)
+    conn = get_db()
+    try:
+        month = date.today().strftime("%Y-%m")
+        conn.execute(
+            "INSERT INTO net_worth_snapshots (user_id, month, net_worth) VALUES (?, ?, ?) "
+            "ON CONFLICT(user_id, month) DO UPDATE SET net_worth = excluded.net_worth, "
+            "recorded_at = datetime('now')",
+            (user_id, month, net["net_worth"]),
+        )
+        conn.commit()
+    finally:
+        conn.close()

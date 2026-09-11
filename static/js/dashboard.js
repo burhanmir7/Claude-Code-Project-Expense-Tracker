@@ -319,6 +319,80 @@
 
     var categoryContainer = document.getElementById("category-chart");
     renderCategoryChart(categoryContainer, readJSON(categoryContainer, "data-categories"));
+
+    function renderNetWorthSparkline(svg, meta, data) {
+        if (!svg || !data || data.length === 0) {
+            return;
+        }
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
+
+        var width = 320;
+        var height = 64;
+        var padX = 4;
+        var padY = 8;
+        var values = data.map(function (row) { return row.net_worth; });
+        var maxVal = Math.max.apply(null, values);
+        var minVal = Math.min.apply(null, values);
+        var span = maxVal - minVal;
+
+        function xFor(i) {
+            return data.length > 1 ? padX + (i * (width - padX * 2)) / (data.length - 1) : width / 2;
+        }
+        function yFor(v) {
+            return span === 0 ? height / 2 : height - padY - ((v - minVal) / span) * (height - padY * 2);
+        }
+
+        var points = data.map(function (row, i) { return { x: xFor(i), y: yFor(row.net_worth), row: row }; });
+
+        var defs = svgEl("defs", {});
+        var gradient = svgEl("linearGradient", { id: "networth-gradient", x1: "0", y1: "0", x2: "0", y2: "1" });
+        gradient.appendChild(svgEl("stop", { offset: "0%", "stop-color": "var(--color-accent)", "stop-opacity": "0.34" }));
+        gradient.appendChild(svgEl("stop", { offset: "100%", "stop-color": "var(--color-accent)", "stop-opacity": "0" }));
+        defs.appendChild(gradient);
+        svg.appendChild(defs);
+
+        var pointsAttr = points.map(function (p) { return p.x + "," + p.y; }).join(" ");
+        var areaD = "M" + points[0].x + "," + height + " L" + pointsAttr.split(" ").join(" L") + " L" + points[points.length - 1].x + "," + height + " Z";
+        svg.appendChild(svgEl("path", { d: areaD, class: "tile-sparkline-area" }));
+        svg.appendChild(svgEl("polyline", { points: pointsAttr, class: "tile-sparkline-large-line" }));
+
+        var originalMetaText = meta ? meta.textContent : "";
+
+        points.forEach(function (p) {
+            var dot = svgEl("circle", { cx: p.x, cy: p.y, r: 2, class: "tile-sparkline-dot" });
+            svg.appendChild(dot);
+
+            var hit = svgEl("rect", { x: p.x - 26, y: 0, width: 52, height: height, class: "tile-sparkline-hit" });
+            hit.addEventListener("mouseenter", function () {
+                dot.classList.add("tile-sparkline-dot-active");
+                var dots = svg.querySelectorAll(".tile-sparkline-dot");
+                for (var i = 0; i < dots.length; i++) {
+                    if (dots[i] !== dot) {
+                        dots[i].classList.add("tile-sparkline-dot-dimmed");
+                    }
+                }
+                if (meta) {
+                    meta.textContent = monthLabel(p.row.month) + " · " + formatRupees(p.row.net_worth);
+                }
+            });
+            hit.addEventListener("mouseleave", function () {
+                dot.classList.remove("tile-sparkline-dot-active");
+                var dots = svg.querySelectorAll(".tile-sparkline-dot");
+                for (var i = 0; i < dots.length; i++) {
+                    dots[i].classList.remove("tile-sparkline-dot-dimmed");
+                }
+                if (meta) {
+                    meta.textContent = originalMetaText;
+                }
+            });
+            svg.appendChild(hit);
+        });
+    }
+
+    var networthSvg = document.getElementById("networth-sparkline");
+    renderNetWorthSparkline(networthSvg, document.getElementById("tile-networth-note"), readJSON(networthSvg, "data-series"));
 })();
 
 (function () {
@@ -416,6 +490,52 @@
             } else {
                 chatForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
             }
+        });
+    }
+
+    function formatRupees(amount) {
+        return "₹" + amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    var contributeButtons = document.querySelectorAll(".goal-contribute-btn");
+    for (var gi = 0; gi < contributeButtons.length; gi++) {
+        contributeButtons[gi].addEventListener("click", function (event) {
+            var btn = event.currentTarget;
+            var goalId = btn.getAttribute("data-goal-id");
+            var goalRow = btn.closest(".goal-row");
+            btn.disabled = true;
+
+            fetch("/api/goals/" + goalId + "/contribute", { method: "POST" })
+                .then(function (response) {
+                    if (!response.ok) {
+                        return response.json().catch(function () {
+                            return null;
+                        }).then(function (data) {
+                            throw new Error(data && data.error ? data.error : "Could not update the goal.");
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (goalRow) {
+                        var fill = goalRow.querySelector(".goal-bar-fill");
+                        var amountEl = goalRow.querySelector(".goal-amount");
+                        var pct = data.target ? Math.min((data.saved / data.target) * 100, 100) : 0;
+                        if (fill) {
+                            fill.style.width = pct + "%";
+                        }
+                        if (amountEl) {
+                            amountEl.textContent = formatRupees(data.saved) + " of " + formatRupees(data.target);
+                        }
+                    }
+                    showToast("Added ₹5,000 to your goal.");
+                })
+                .catch(function (err) {
+                    showToast(err && err.message ? err.message : "Could not update the goal.");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                });
         });
     }
 })();
