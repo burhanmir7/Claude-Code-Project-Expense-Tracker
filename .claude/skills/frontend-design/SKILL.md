@@ -1,47 +1,47 @@
 ---
 name: frontend-design
-description: Designs and generates modern, production-ready UI for Spendly, a personal expense tracker built on Flask + Jinja2 + vanilla CSS (repo - https://github.com/campusx-official/spendly). Produces clean fintech-style pages and components - cards, forms, tables, dashboards, modals - with consistent spacing, soft shadows, rounded corners, and Lucide icons. Use this skill whenever the user asks to design, build, create, redesign, improve, or style any Spendly page, screen, section, or component - including phrasings like "design the X page", "create UI for X", "build a component for X", "make the X look better", "redesign X", or any request about Spendly's frontend, layout, CSS, or visual polish - even when Spendly isn't named explicitly if the conversation context is clearly about it.
+description: Designs and generates modern, production-ready UI for WISEX (formerly Spendly), a personal expense tracker built on Flask + Jinja2 + vanilla CSS, styled with the dark "Nocturne" design system. Produces clean fintech-style pages and components - cards, forms, tables, dashboards, modals - with consistent spacing, soft shadows, rounded corners, and inline SVG icons. Use this skill whenever the user asks to design, build, create, redesign, improve, or style any WISEX page, screen, section, or component - including phrasings like "design the X page", "create UI for X", "build a component for X", "make the X look better", "redesign X", or any request about WISEX's frontend, layout, CSS, or visual polish - even when WISEX isn't named explicitly if the conversation context is clearly about it.
 disable-model-invocation: true
 ---
 
-# Spendly UI Designer
+# WISEX UI Designer
 
-You are designing frontend UI for **Spendly**, a personal expense tracker. Spendly is a Flask app with server-rendered Jinja2 templates, vanilla CSS, and a sprinkle of vanilla JS. The goal of this skill is to help you generate UI that feels like it belongs in a polished, modern fintech product - not generic bootstrap-era output, and not React/Tailwind output that doesn't match the stack.
+You are designing frontend UI for **WISEX**, a personal expense tracker (rebranded from Spendly). WISEX is a Flask app with server-rendered Jinja2 templates, vanilla CSS, and a sprinkle of vanilla JS, styled with the "Nocturne" design system - a dark-first fintech aesthetic with a light-mode toggle. The goal of this skill is to help you generate UI that feels like it belongs in this polished, modern fintech product - not generic bootstrap-era output, and not React/Tailwind output that doesn't match the stack.
 
-## What Spendly's stack looks like
+## What WISEX's stack looks like
 
-- **Backend:** Flask (`app.py`), SQLite or similar (`database/`)
-- **Templates:** Jinja2 in `templates/` (e.g. `base.html`, `dashboard.html`, `add_expense.html`)
-- **Styles:** vanilla CSS in `static/css/` - no Tailwind, no CSS-in-JS, no preprocessors assumed
-- **Scripts:** small amounts of vanilla JS in `static/js/` for interactions (toggles, modals, chart init)
-- **Icons:** Lucide, loaded via CDN script tag, used as `<i data-lucide="icon-name">` and initialized with `lucide.createIcons()`
+- **Backend:** Flask (`app.py`), SQLite (`database/`)
+- **Templates:** Jinja2 in `templates/` (e.g. `base.html`, `profile.html` - the main dashboard, `accounts.html`, `add_expense.html`)
+- **Styles:** vanilla CSS in `static/css/` - `style.css` (global + brand primitives), `nocturne.css` (dark/light design tokens), `dashboard.css`, `chat.css`, `accounts.css`, `profile.css`. No Tailwind, no CSS-in-JS, no preprocessors.
+- **Scripts:** small amounts of vanilla JS in `static/js/` for interactions (theme toggle in `main.js`, chart init in `dashboard.js`, chat drawer in `chat.js`)
+- **Icons:** hand-inlined SVGs directly in templates (`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" ...>`), not an icon font or CDN library. Match the existing stroke style (round caps/joins, 1.75 stroke-width) when adding a new icon.
 
-Generate output that fits this stack. Do not introduce React, Vue, Tailwind, shadcn, Bootstrap, or styled-components unless the user explicitly asks for a migration.
+Generate output that fits this stack. Do not introduce React, Vue, Tailwind, shadcn, Bootstrap, styled-components, or an icon library/CDN (Lucide, Font Awesome, etc.) unless the user explicitly asks for one.
 
 ## Before you design: check what already exists
 
-If the user's project files are available (e.g. they've shared the repo, uploaded files, or you're inside the codebase), open `base.html`, the main CSS file, and one or two existing templates before generating anything new. The goal is *consistency* - Spendly should feel like one coherent product, not a collage.
+If the user's project files are available (e.g. they've shared the repo, uploaded files, or you're inside the codebase), open `base.html`, the main CSS file, and one or two existing templates before generating anything new. The goal is *consistency* - WISEX should feel like one coherent product, not a collage.
 
 Specifically, look for and reuse:
 
-- **Color tokens** (CSS custom properties like `--color-primary`, `--color-bg`, `--color-surface`, etc.)
+- **Color tokens** - the real ones live in `static/css/nocturne.css` (`--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, `--color-accent-2`, `--color-divider`, plus `--color-neutral-100..900` and `--color-accent-100..900`/`--color-accent-2-100..900` scales). Both a dark block and a light-mode override block exist - respect whichever the token is meant for, don't hardcode a hex that only works in one mode.
 - **Spacing scale** (if there's a `--space-1`, `--space-2` pattern, use it)
 - **Font family and type scale**
 - **Existing component classes** - `.card`, `.btn`, `.input`, `.badge`, `.table`, etc.
-- **The base layout** - sidebar? topbar? container width? Follow it.
+- **The base layout** - `_dashboard_sidebar.html` partial for the sidebar nav, topbar, container width - follow it.
 
 If you can't see the existing files and the request is non-trivial, ask the user to share a screenshot or paste a relevant template before you generate. One screenshot of the existing dashboard saves three rounds of revision.
 
-## The Spendly design language
+## The Nocturne design language
 
-When you have no existing reference to follow, default to this. It's a clean, fintech-leaning aesthetic - close in spirit to Linear, Notion, or modern banking apps.
+When you have no existing reference to follow, default to this. It's a dark, fintech-leaning aesthetic close in spirit to modern banking/trading apps, with a supported light-mode toggle (site-wide, driven by `static/js/main.js`).
 
-**Palette (defaults, override to match existing):**
-- Background: very light neutral (`#F7F8FA` or near-white)
-- Surface (cards): white (`#FFFFFF`) with a soft border (`#E5E7EB`) and/or tiny shadow
-- Text: near-black for primary (`#111827`), muted gray for secondary (`#6B7280`)
-- Primary accent: a single confident color - indigo/violet (`#6366F1`), emerald (`#10B981`), or similar. Pick one and stick with it.
-- Semantic: green for income/positive (`#10B981`), red for expense/negative (`#EF4444`), amber for warnings (`#F59E0B`)
+**Palette (defaults, override to match `static/css/nocturne.css`):**
+- Background (dark): near-black slate (`#161826`); light mode swaps to a near-white ground - always define both, never hardcode one mode's hex outside its block
+- Surface (cards): one step lighter than background (`#232532` dark) with a soft divider border, not a heavy shadow
+- Text: light neutral on dark (`#e9e9ed`), inverted for light mode
+- Primary accent: violet/indigo (`--color-accent`, `--color-accent-2`) - use the existing accent scale steps (100-900) rather than inventing new accent hexes
+- Semantic: green for income/positive, red for expense/negative, amber for warnings - reuse whatever semantic tokens already exist before adding new ones
 
 **Spacing:** 8px grid. Use multiples of 4px or 8px for padding, gap, margin. Don't use arbitrary values like 13px or 27px.
 
@@ -58,25 +58,21 @@ When you have no existing reference to follow, default to this. It's a clean, fi
 - Tables: zebra stripes optional, but always have row hover, right-align numeric columns
 - Forms: label above input, helper text below, error state in red with icon
 
-## Icons: Lucide
+## Icons: inline SVG
 
-Load Lucide once in `base.html`:
-
-```html
-<script src="https://unpkg.com/lucide@latest"></script>
-```
-
-And call `lucide.createIcons()` after the DOM is ready (and after any dynamic DOM insert). In templates, use:
+WISEX does not use an icon font or CDN icon library. Icons are hand-inlined `<svg>` markup directly in the template, matching this stroke style:
 
 ```html
-<i data-lucide="wallet"></i>
-<i data-lucide="trending-up"></i>
-<i data-lucide="plus"></i>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+     stroke-linecap="round" stroke-linejoin="round" class="sidebar-icon" aria-hidden="true">
+  <circle cx="12" cy="12" r="9"></circle>
+  <path d="M12 7v10M8 10h5.5a2.5 2.5 0 0 1 0 5H8"></path>
+</svg>
 ```
 
-Size icons via CSS with `width` and `height` on the `<svg>` (after Lucide replaces the `<i>`) or wrap in a span with the size you want. Prefer 16px for inline with text, 20px for buttons, 24px for section headers.
+Find a matching glyph's path data from any 24x24 outline icon set (Feather/Lucide-style paths work - the existing icons in `_dashboard_sidebar.html` and `profile.html` were sourced this way) and inline the `<path>`/`<circle>`/etc. directly - don't add a script tag or CDN dependency to fetch them at runtime. Size via CSS on the `<svg>` (`width`/`height`), not inline attributes. Prefer 16px inline with text, 20px for buttons, 24px for section headers.
 
-Pick icons that carry meaning. A few Spendly-appropriate defaults:
+Pick icons that carry meaning. A few WISEX-appropriate defaults:
 - Expense/spend: `arrow-down-right`, `shopping-bag`, `credit-card`
 - Income: `arrow-up-right`, `wallet`, `trending-up`
 - Budget: `target`, `pie-chart`
@@ -100,7 +96,7 @@ Name the key sections of the page/component and any notable UX decisions. Keep i
 - **CSS** - either a new file (e.g. `static/css/dashboard.css`) or additions to an existing stylesheet. Scope with a page/component class prefix (`.dashboard-...`, `.tx-table-...`) so styles don't leak.
 - **JS** (only if needed) - vanilla, no frameworks. Small and readable.
 
-Put each file in its own fenced code block with a clear header comment or path annotation like `{# templates/dashboard.html #}` or `/* static/css/dashboard.css */`.
+Put each file in its own fenced code block with a clear header comment or path annotation like `{# templates/profile.html #}` or `/* static/css/dashboard.css */`.
 
 ### 3. Integration note (1-3 lines)
 How to wire it up - which Flask route renders it, what variables the template expects, any new dependency (almost always none). If the user needs to add a link in the sidebar or a route in `app.py`, call that out.

@@ -19,7 +19,7 @@ spendly/
 │   ├── chat.py           # Conversation orchestration + tool loop
 │   ├── receipts.py       # Receipt image validation + structured extraction
 │   ├── insights.py       # Rule-based budget insights (no LLM)
-│   └── tools/            # Self-registering tool modules: expenses, analytics, accounts
+│   └── tools/            # Self-registering tool modules: expenses, accounts (analytics is rule-based, see ai/insights.py)
 ├── templates/
 │   ├── base.html       # Shared layout — all templates must extend this
 │   ├── _chat_drawer.html  # Partial included by base.html for logged-in users
@@ -63,7 +63,7 @@ spendly/
 - **Flask only** — no FastAPI, no Django, no other web frameworks
 - **SQLite only** — no PostgreSQL, no SQLAlchemy ORM, no external DB
 - **Vanilla JS only** — no React, no jQuery, no npm packages. CSS is hand-written per page (see `static/css/<page>.css`) — no CSS framework
-- **No new pip packages** — work within `requirements.txt` as-is. The single sanctioned exception is `google-genai` (pinned in `requirements.txt`), used only by `ai/llm_client.py` for the Gemini free-tier API. Anything else must be flagged and approved first
+- **No new pip packages** — work within `requirements.txt` as-is. The single sanctioned exception is `groq` (pinned in `requirements.txt`), used only by `ai/llm_client.py` for the Groq API. Anything else must be flagged and approved first
 - Python 3.10+ assumed — f-strings and `match` statements are fine (the project venv is 3.14, so `imghdr` and other 3.13-removed modules are unavailable)
 
 ---
