@@ -11,6 +11,7 @@
     var clearButton = document.getElementById("chat-clear");
     var messagesEl = document.getElementById("chat-messages");
     var statusEl = document.getElementById("chat-status");
+    var typingEl = document.getElementById("chat-typing");
     var formEl = document.getElementById("chat-form");
     var inputEl = document.getElementById("chat-input");
 
@@ -108,10 +109,33 @@
         var card = document.createElement("div");
         card.className = "chat-receipt-card";
 
-        var summary = document.createElement("div");
-        summary.textContent = expense.category + " · ₹" + expense.amount + " · " + expense.date +
-            (expense.description ? " · " + expense.description : "");
-        card.appendChild(summary);
+        var eyebrow = document.createElement("div");
+        eyebrow.className = "chat-receipt-eyebrow";
+        eyebrow.textContent = "Receipt found";
+        card.appendChild(eyebrow);
+
+        var fields = [
+            { label: "Merchant", value: expense.description || "—" },
+            { label: "Amount", value: "₹" + expense.amount, className: "chat-receipt-amount" },
+            { label: "Category", value: expense.category },
+            { label: "Date", value: expense.date }
+        ];
+        fields.forEach(function (field) {
+            var row = document.createElement("div");
+            row.className = "chat-receipt-row";
+
+            var label = document.createElement("span");
+            label.className = "chat-receipt-row-label";
+            label.textContent = field.label;
+
+            var value = document.createElement("span");
+            value.className = "chat-receipt-row-value" + (field.className ? " " + field.className : "");
+            value.textContent = field.value;
+
+            row.appendChild(label);
+            row.appendChild(value);
+            card.appendChild(row);
+        });
 
         var saveButton = document.createElement("button");
         saveButton.type = "button";
@@ -187,15 +211,17 @@
     }
 
     function setStatus(text) {
-        if (!statusEl) {
-            return;
+        if (statusEl) {
+            if (text) {
+                statusEl.textContent = text;
+                statusEl.hidden = false;
+            } else {
+                statusEl.hidden = true;
+                statusEl.textContent = "";
+            }
         }
-        if (text) {
-            statusEl.textContent = text;
-            statusEl.hidden = false;
-        } else {
-            statusEl.hidden = true;
-            statusEl.textContent = "";
+        if (typingEl) {
+            typingEl.hidden = !text;
         }
     }
 
@@ -360,6 +386,18 @@
                 setOpen(true);
                 scanReceipt(file);
             }
+        });
+    }
+
+    var quickChips = drawer.querySelectorAll(".chat-quick-chip");
+    for (var qi = 0; qi < quickChips.length; qi++) {
+        quickChips[qi].addEventListener("click", function (event) {
+            var question = event.currentTarget.getAttribute("data-question");
+            if (!question) {
+                return;
+            }
+            setOpen(true);
+            sendMessage(question);
         });
     }
 

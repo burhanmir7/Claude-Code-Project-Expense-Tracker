@@ -22,7 +22,7 @@
                 <p class="dashboard-subline">{{ stats[1].value }} transactions · {{ stats[0].value }} out · {{ "All time" if active_preset == "all_time" else "selected range" }}</p>
             </div>
             <div class="dashboard-header-actions">
-                <button type="button" class="dashboard-search-button" aria-label="Search or jump to..." disabled>
+                <button type="button" class="dashboard-search-button" aria-label="Search or jump to..." aria-haspopup="dialog" aria-expanded="false">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="dashboard-search-icon" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <span>Search or jump to…</span>
                     <kbd class="dashboard-kbd">⌘K</kbd>
@@ -382,6 +382,81 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="command-palette" class="command-palette" hidden>
+        <div class="command-palette-scrim"></div>
+        <div class="command-palette-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+            <input type="text" id="command-palette-input" class="command-palette-input"
+                   placeholder="Type a command…" autocomplete="off" aria-label="Type a command">
+            <div class="command-list" id="command-palette-list" role="listbox">
+
+                <button type="button" class="command-row" data-command="add-expense">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+                    <span class="command-row-label">Add an expense</span>
+                    <span class="command-row-hint">A</span>
+                </button>
+
+                <button type="button" class="command-row" data-command="scan-receipt">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3M3 12h18"></path></svg></span>
+                    <span class="command-row-label">Scan a receipt</span>
+                    <span class="command-row-hint">R</span>
+                </button>
+
+                <button type="button" class="command-row" data-command="ask-assistant">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l.9-5.4A8 8 0 1 1 21 12Z"></path></svg></span>
+                    <span class="command-row-label">Ask the assistant</span>
+                    <span class="command-row-hint">C</span>
+                </button>
+
+                <a class="command-row"
+                   href="{{ url_for('profile', date_from=preset_ranges.this_month[0], date_to=preset_ranges.this_month[1], q=search_query, category=drill_category) }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+                    <span class="command-row-label">Range — this month</span>
+                    <span class="command-row-hint"></span>
+                </a>
+                <a class="command-row"
+                   href="{{ url_for('profile', date_from=preset_ranges.last_3_months[0], date_to=preset_ranges.last_3_months[1], q=search_query, category=drill_category) }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+                    <span class="command-row-label">Range — last 3 months</span>
+                    <span class="command-row-hint"></span>
+                </a>
+                <a class="command-row"
+                   href="{{ url_for('profile', date_from=preset_ranges.last_6_months[0], date_to=preset_ranges.last_6_months[1], q=search_query, category=drill_category) }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+                    <span class="command-row-label">Range — last 6 months</span>
+                    <span class="command-row-hint"></span>
+                </a>
+                <a class="command-row" href="{{ url_for('profile', q=search_query, category=drill_category) }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+                    <span class="command-row-label">Range — all time</span>
+                    <span class="command-row-hint"></span>
+                </a>
+
+                <button type="button" class="command-row" data-command="toggle-theme">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"></path></svg></span>
+                    <span class="command-row-label">Toggle theme</span>
+                    <span class="command-row-hint">T</span>
+                </button>
+
+                <a class="command-row" href="{{ url_for('profile') }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg></span>
+                    <span class="command-row-label">Clear all filters</span>
+                    <span class="command-row-hint"></span>
+                </a>
+
+                {% for c in ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"] %}
+                <a class="command-row"
+                   href="{{ url_for('profile', date_from=selected_from, date_to=selected_to, q=search_query, category=c) }}">
+                    <span class="command-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"></path><path d="M15 3.6A9 9 0 0 1 20.4 9H15z"></path></svg></span>
+                    <span class="command-row-label">Filter — {{ c }}</span>
+                    <span class="command-row-hint"></span>
+                </a>
+                {% endfor %}
+
+                <div class="command-empty" id="command-palette-empty" hidden>No command matches that.</div>
             </div>
         </div>
     </div>
