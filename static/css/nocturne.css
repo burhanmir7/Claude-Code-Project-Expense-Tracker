@@ -80,6 +80,25 @@
   --shadow-lg: 0 0 0 1px #9397ab, 0 16px 40px rgba(0,0,0,0.65);
 }
 
+/* Light mode — the sidebar's theme toggle flips `data-theme` on <html> (the
+   same attribute/localStorage key static/js/main.js already drives site-wide).
+   Because every rule above reads from these tokens, overriding them here is
+   the only change needed. See design_handoff_dashboard_redesign/README.md
+   "Light mode". */
+[data-theme="light"] {
+  --color-bg: #f3f5fe;
+  --color-surface: #ffffff;
+  --color-text: #292b31;
+  --color-divider: color-mix(in srgb, #292b31 14%, transparent);
+  --shadow-sm: 0 0 0 1px #e4e7f5;
+  --shadow-md: 0 0 0 1px #cfd3e5, 0 6px 18px rgba(41,43,49,0.10);
+  --shadow-lg: 0 0 0 1px #b2b6ca, 0 16px 40px rgba(41,43,49,0.18);
+  --color-accent: #5d5294;
+}
+
+input[type="date"] { color-scheme: dark; }
+[data-theme="light"] input[type="date"] { color-scheme: light; }
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
