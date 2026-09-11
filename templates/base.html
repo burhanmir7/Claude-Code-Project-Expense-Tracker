@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Spendly{% endblock %}</title>
+    <title>{% block title %}WISEX{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -19,8 +20,8 @@
     <nav class="navbar">
         <div class="nav-inner">
             <a href="{{ url_for('landing') }}" class="nav-brand">
-                <span class="brand-icon">◈</span>
-                <span class="brand-name">Spendly</span>
+                {% include "_brand_mark.html" %}
+                <span class="brand-name">WISEX</span>
             </a>
             <div class="nav-links">
                 <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
@@ -74,8 +75,8 @@
     {% if not hide_chrome %}
     <footer class="footer">
         <div class="footer-inner">
-            <span class="brand-icon">◈</span>
-            <span class="footer-name">Spendly</span>
+            {% include "_brand_mark.html" %}
+            <span class="footer-name">WISEX</span>
             <p class="footer-copy">Track every rupee. Own your finances.</p>
             <a href="{{ url_for('terms') }}">Terms and Conditions</a>
             <a href="{{ url_for('privacy') }}">Privacy Policy</a>

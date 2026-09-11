@@ -36,7 +36,7 @@ def new_user_id_for(client, email="new@example.com"):
 
 def login_demo(client):
     client.get("/logout")
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
 
 # ------------------------------------------------------------------ #

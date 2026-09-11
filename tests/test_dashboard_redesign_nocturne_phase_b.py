@@ -2,7 +2,7 @@ import re
 
 
 def login_demo(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
 
 def test_profile_renders_command_palette_and_enables_search_button(client):

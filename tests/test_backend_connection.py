@@ -19,7 +19,7 @@ DEMO_USER_ID = 1
 def test_get_user_by_id_valid(client):
     user = get_user_by_id(DEMO_USER_ID)
     assert user["name"] == "Demo User"
-    assert user["email"] == "demo@spendly.com"
+    assert user["email"] == "demo@wisex.com"
     assert user["member_since"]
 
 
@@ -91,7 +91,7 @@ def test_landing_unauthenticated_shows_landing_page(client):
 
 
 def test_landing_authenticated_redirects_to_profile(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.get("/")
 
@@ -119,7 +119,7 @@ def test_profile_stale_session_user_redirects_to_login(client):
 
 
 def test_profile_authenticated_seed_user(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
     response = client.get("/profile")
     body = response.get_data(as_text=True)
 
@@ -137,7 +137,7 @@ def test_profile_authenticated_seed_user(client):
 
 
 def test_profile_hides_top_navbar_now_wired(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.get("/profile")
     body = response.get_data(as_text=True)
@@ -222,7 +222,7 @@ def test_login_page_still_shows_navbar(client):
 
 
 def test_profile_page_hides_top_navbar(client):
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
+    client.post("/login", data={"email": "demo@wisex.com", "password": "demo123"})
 
     response = client.get("/profile")
     body = response.get_data(as_text=True)
