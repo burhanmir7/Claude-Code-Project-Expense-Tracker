@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date, timedelta
+from datetime import datetime, timedelta, timezone
 
 from werkzeug.security import generate_password_hash
 
@@ -137,7 +137,7 @@ def seed_db():
     )
     user_id = cursor.lastrowid
 
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     month_start = today.replace(day=1)
     days_into_month = (today - month_start).days
 

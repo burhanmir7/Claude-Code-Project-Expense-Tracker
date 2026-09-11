@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime, timezone
 
 from database.db import get_db
 
@@ -22,7 +22,11 @@ def get_user_by_id(user_id):
     if row is None:
         return None
 
-    member_since = datetime.strptime(row["created_at"], "%Y-%m-%d %H:%M:%S").strftime("%B %Y")
+    member_since = (
+        datetime.strptime(row["created_at"], "%Y-%m-%d %H:%M:%S")
+        .replace(tzinfo=timezone.utc)
+        .strftime("%B %Y")
+    )
     return {"name": row["name"], "email": row["email"], "member_since": member_since}
 
 
@@ -327,11 +331,11 @@ def get_monthly_totals(user_id, months=6):
 
     totals_by_month = {row["ym"]: row["total"] for row in rows}
 
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     year, month = today.year, today.month
     buckets = []
     for _ in range(months):
-        buckets.append("%04d-%02d" % (year, month))
+        buckets.append(f"{year:04d}-{month:02d}")
         month -= 1
         if month == 0:
             month = 12
@@ -344,7 +348,7 @@ def get_monthly_totals(user_id, months=6):
 def get_budgets(user_id):
     conn = get_db()
     try:
-        month_prefix = date.today().strftime("%Y-%m")
+        month_prefix = datetime.now(timezone.utc).date().strftime("%Y-%m")
         rows = conn.execute(
             "SELECT b.id, b.category, b.monthly_ceiling, "
             "COALESCE((SELECT SUM(e.amount) FROM expenses e "
@@ -456,11 +460,11 @@ def net_worth_series(user_id, months=6):
 
     snapshots_by_month = {r["month"]: r["net_worth"] for r in rows}
 
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     year, month = today.year, today.month
     buckets = []
     for _ in range(months):
-        buckets.append("%04d-%02d" % (year, month))
+        buckets.append(f"{year:04d}-{month:02d}")
         month -= 1
         if month == 0:
             month = 12
@@ -483,7 +487,7 @@ def _record_net_worth_snapshot(user_id):
     net = get_net_worth(user_id)
     conn = get_db()
     try:
-        month = date.today().strftime("%Y-%m")
+        month = datetime.now(timezone.utc).date().strftime("%Y-%m")
         conn.execute(
             "INSERT INTO net_worth_snapshots (user_id, month, net_worth) VALUES (?, ?, ?) "
             "ON CONFLICT(user_id, month) DO UPDATE SET net_worth = excluded.net_worth, "
