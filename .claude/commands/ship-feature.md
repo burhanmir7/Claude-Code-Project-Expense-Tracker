@@ -67,7 +67,7 @@ mark every item as checked [x]>
 
 ## How to test
 1. Run python app.py
-2. Log in as demo@spendly.com / demo123
+2. Register a new account via /register (the app no longer auto-seeds a demo user), or log in with an account you've already created
 3. <specific steps from the spec to verify this feature works>
 ```
 

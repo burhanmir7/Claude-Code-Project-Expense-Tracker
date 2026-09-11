@@ -7,6 +7,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from database.db import seed_db  # noqa: E402 (must follow sys.path insert above)
+
 
 @pytest.fixture
 def client(monkeypatch, tmp_path):
@@ -17,6 +19,8 @@ def client(monkeypatch, tmp_path):
         app_module = importlib.reload(sys.modules["app"])
     else:
         app_module = importlib.import_module("app")
+
+    seed_db()
 
     app_module.app.config["TESTING"] = True
     with app_module.app.test_client() as test_client:

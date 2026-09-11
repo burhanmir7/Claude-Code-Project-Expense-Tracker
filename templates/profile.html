@@ -109,8 +109,8 @@
                     <span class="tile-eyebrow">Net worth</span>
                 </div>
                 <span class="tile-figure tile-figure-large {% if net_worth_is_negative %}tile-figure-negative{% endif %}">{{ net_worth }}</span>
-                <p class="tile-note">{{ net_worth_account_count }} account{{ "s" if net_worth_account_count != 1 else "" }}</p>
-                <svg class="tile-sparkline tile-sparkline-large" viewBox="0 0 320 64" aria-hidden="true">
+                <p class="tile-note" id="tile-networth-note">{{ net_worth_account_count }} account{{ "s" if net_worth_account_count != 1 else "" }}</p>
+                <svg id="networth-sparkline" class="tile-sparkline tile-sparkline-large" viewBox="0 0 320 64" aria-hidden="true" data-series="{{ net_worth_series | tojson | forceescape }}">
                     <polyline class="tile-sparkline-placeholder-line" points="0,32 320,32"></polyline>
                 </svg>
             </div>
@@ -221,36 +221,59 @@
         </div>
 
         <div class="insights-row">
-            {% for insight in insights %}
+            {% if insights.top_category %}
             <div class="insight-card">
-                <span class="insight-icon" aria-hidden="true">{{ insight.icon | safe }}</span>
-                <p class="insight-title">{{ insight.title }}</p>
-                <p class="insight-body">{{ insight.body }}</p>
+                <span class="insight-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.61 3.24L4 3a1 1 0 0 0-1 1l.24 5.61a2 2 0 0 0 .59 1.39l9.59 9.58a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r="1.25" fill="currentColor" stroke="none"></circle></svg>
+                </span>
+                <p class="insight-title">Top category</p>
+                <p class="insight-body">{{ insights.top_category.name }} is your top category at ₹{{ "{:,.2f}".format(insights.top_category.amount) }} ({{ insights.top_category.pct }}% of spend) across {{ insights.top_category.count }} transaction{{ "s" if insights.top_category.count != 1 else "" }}.</p>
             </div>
             {% else %}
             <div class="insight-card insight-card-empty">
                 <p class="insight-title">Top category</p>
                 <p class="insight-body">Insights are computed once you have spending in more than one category.</p>
             </div>
+            {% endif %}
+
+            {% if insights.budget_headroom %}
+            <div class="insight-card">
+                <span class="insight-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M8 10h5.5a2.5 2.5 0 0 1 0 5H8"></path></svg>
+                </span>
+                <p class="insight-title">Budget headroom</p>
+                <p class="insight-body">₹{{ "{:,.2f}".format(insights.budget_headroom.headroom) }} left across {{ insights.budget_headroom.budget_count }} budget{{ "s" if insights.budget_headroom.budget_count != 1 else "" }} this month. On pace for ₹{{ "{:,.2f}".format(insights.budget_headroom.projected_total) }} by month end.</p>
+            </div>
+            {% else %}
             <div class="insight-card insight-card-empty">
                 <p class="insight-title">Budget headroom</p>
                 <p class="insight-body">Set up a budget to see how much headroom you have left this month.</p>
             </div>
+            {% endif %}
+
             <div class="insight-card insight-card-empty">
                 <p class="insight-title">Upcoming renewals</p>
                 <p class="insight-body">Recurring-expense tracking is coming in a future update.</p>
             </div>
-            {% endfor %}
         </div>
 
         <div class="budgets-goals-row">
             <div class="panel-card">
                 <h2>Budgets</h2>
                 {% if budgets %}
+                {% set ring_circumference = 188.4956 %}
                 <div class="budgets-grid">
                     {% for b in budgets %}
                     <div class="budget-ring">
+                        <svg class="budget-ring-svg" viewBox="0 0 76 76" aria-hidden="true">
+                            <circle class="budget-ring-track" cx="38" cy="38" r="30"></circle>
+                            <circle class="budget-ring-arc{% if b.pct_used >= 90 %} budget-ring-arc-high{% endif %}"
+                                    cx="38" cy="38" r="30"
+                                    stroke-dasharray="{{ ring_circumference }}"
+                                    stroke-dashoffset="{{ (ring_circumference - (ring_circumference * b.pct_used / 100)) | round(4) }}"></circle>
+                        </svg>
                         <span class="budget-ring-name">{{ b.category }}</span>
+                        <span class="budget-ring-amounts">₹{{ "{:,.0f}".format(b.spent) }} / ₹{{ "{:,.0f}".format(b.monthly_ceiling) }}</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -263,8 +286,15 @@
                 {% if goals %}
                 <div class="goals-list">
                     {% for g in goals %}
-                    <div class="goal-row">
-                        <span class="goal-name">{{ g.name }}</span>
+                    <div class="goal-row" data-goal-id="{{ g.id }}">
+                        <div class="goal-row-header">
+                            <span class="goal-name">{{ g.name }}</span>
+                            <button type="button" class="btn btn-ghost goal-contribute-btn" data-goal-id="{{ g.id }}" aria-label="Contribute ₹5,000 to {{ g.name }}">＋</button>
+                        </div>
+                        <span class="goal-amount">₹{{ "{:,.2f}".format(g.saved) }} of ₹{{ "{:,.2f}".format(g.target) }}</span>
+                        <div class="goal-bar">
+                            <div class="goal-bar-fill" style="width: {{ g.pct }}%"></div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>

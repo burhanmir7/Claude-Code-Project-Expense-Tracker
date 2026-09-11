@@ -62,6 +62,40 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            category TEXT NOT NULL CHECK (category IN
+                ('Food', 'Transport', 'Bills', 'Health', 'Entertainment', 'Shopping', 'Other')),
+            monthly_ceiling REAL NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, category),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            target REAL NOT NULL,
+            saved REAL NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS net_worth_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            month TEXT NOT NULL,
+            net_worth REAL NOT NULL,
+            recorded_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, month),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -124,5 +158,21 @@ def seed_db():
         "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
         sample_expenses,
     )
+
+    budget_rows = [
+        (user_id, "Food", 8000),
+        (user_id, "Transport", 6000),
+        (user_id, "Bills", 7000),
+        (user_id, "Shopping", 5000),
+    ]
+    conn.executemany(
+        "INSERT INTO budgets (user_id, category, monthly_ceiling) VALUES (?, ?, ?)",
+        budget_rows,
+    )
+    conn.execute(
+        "INSERT INTO goals (user_id, name, target, saved) VALUES (?, ?, ?, ?)",
+        (user_id, "Kyoto trip", 150000, 45000),
+    )
+
     conn.commit()
     conn.close()

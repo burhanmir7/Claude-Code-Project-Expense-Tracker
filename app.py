@@ -8,18 +8,22 @@ from werkzeug.security import check_password_hash
 
 from ai import llm_client
 from ai.chat import HISTORY_LIMIT, run_chat_turn
+from ai.insights import get_insights
 from ai.tools import is_mutating
 from ai.receipts import MAX_RECEIPT_BYTES, detect_image_type, extract_receipt, normalise_receipt
-from database.db import ACCOUNT_TYPES, CATEGORIES, create_user, get_user_by_email, init_db, seed_db
+from database.db import ACCOUNT_TYPES, CATEGORIES, create_user, get_user_by_email, init_db
 from database.queries import (
+    contribute_to_goal,
     delete_account_by_id,
     delete_chat_messages,
     delete_expense_by_id,
     get_account_by_id,
     get_accounts,
+    get_budgets,
     get_category_breakdown,
     get_chat_messages,
     get_expense_by_id,
+    get_goals,
     get_monthly_totals,
     get_net_worth,
     get_recent_transactions,
@@ -28,6 +32,7 @@ from database.queries import (
     insert_account,
     insert_chat_message,
     insert_expense,
+    net_worth_series,
     update_account,
     update_expense,
 )
@@ -240,6 +245,11 @@ def profile():
     net_worth_is_negative = net["net_worth"] < 0
     net_worth_account_count = net["account_count"]
 
+    budgets = get_budgets(user_id)
+    goals = get_goals(user_id)
+    insights = get_insights(user_id, date_from=date_from, date_to=date_to)
+    net_worth_series_points = net_worth_series(user_id)
+
     return render_template(
         "profile.html", user=user, stats=stats,
         transactions=transactions,
@@ -254,7 +264,8 @@ def profile():
         net_worth=net_worth, net_worth_is_negative=net_worth_is_negative,
         net_worth_account_count=net_worth_account_count,
         drill_category=drill_category,
-        budgets=[], goals=[], insights=[],
+        budgets=budgets, goals=goals, insights=insights,
+        net_worth_series=net_worth_series_points,
     )
 
 
@@ -641,9 +652,24 @@ def api_add_expense():
     return jsonify({"success": True})
 
 
+GOAL_CONTRIBUTION_AMOUNT = 5000
+
+
+@app.route("/api/goals/<int:goal_id>/contribute", methods=["POST"])
+def api_contribute_to_goal(goal_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return _json_error("Authentication required.", 401)
+
+    result = contribute_to_goal(goal_id, user_id, GOAL_CONTRIBUTION_AMOUNT)
+    if result is None:
+        return _json_error("Goal not found.", 404)
+
+    return jsonify({"saved": result["saved"], "target": result["target"]})
+
+
 with app.app_context():
     init_db()
-    seed_db()
 
 
 if __name__ == "__main__":
