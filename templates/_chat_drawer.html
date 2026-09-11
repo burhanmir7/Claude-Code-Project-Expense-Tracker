@@ -1,5 +1,5 @@
-<button id="chat-toggle" class="chat-toggle" type="button" aria-expanded="false">
-    <span class="chat-toggle-icon">◈</span>
+<button id="chat-toggle" class="chat-toggle" type="button" aria-expanded="false" aria-label="Open Spendly Assistant">
+    <span class="chat-toggle-icon" aria-hidden="true">◈</span>
 </button>
 
 <aside id="chat-drawer" class="chat-drawer chat-drawer-collapsed"
@@ -7,8 +7,9 @@
        data-send-url="{{ url_for('chat_send') }}"
        data-receipt-url="{{ url_for('chat_scan_receipt') }}"
        data-expenses-url="{{ url_for('api_add_expense') }}">
-    <div class="chat-panel">
-        <div class="chat-header">
+    <div id="chat-panel" class="chat-panel">
+        <div id="chat-header" class="chat-header">
+            <span class="chat-status-dot" aria-hidden="true"></span>
             <span class="chat-title">Spendly Assistant</span>
             <div class="chat-header-actions">
                 <button id="chat-clear" class="chat-clear" type="button">Clear</button>
@@ -21,12 +22,26 @@
         </div>
 
         <p id="chat-status" class="chat-status" hidden></p>
+        <div id="chat-typing" class="chat-typing" hidden aria-hidden="true">
+            <span class="chat-typing-dot"></span>
+            <span class="chat-typing-dot"></span>
+            <span class="chat-typing-dot"></span>
+        </div>
 
         <form id="chat-form" class="chat-form">
-            <input type="file" id="chat-attach-input" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
-            <button type="button" id="chat-attach-button" class="chat-attach" aria-label="Attach a receipt image">📎</button>
-            <textarea id="chat-input" class="chat-input" maxlength="2000" rows="1" placeholder="Ask about your spending..."></textarea>
-            <button type="submit" class="chat-send">Send</button>
+            <div class="chat-quick-chips">
+                <button type="button" class="chat-quick-chip" data-question="What is my biggest category?">Biggest category?</button>
+                <button type="button" class="chat-quick-chip" data-question="Where can I save?">Where can I save?</button>
+                <button type="button" class="chat-quick-chip" data-question="How much have I spent?">How much this range?</button>
+            </div>
+            <div class="chat-form-row">
+                <input type="file" id="chat-attach-input" class="chat-attach-input" accept="image/png,image/jpeg,image/webp,image/gif">
+                <button type="button" id="chat-attach-button" class="chat-attach" aria-label="Attach a receipt image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3"></path><path d="M3 12h18"></path></svg>
+                </button>
+                <textarea id="chat-input" class="chat-input" maxlength="2000" rows="1" placeholder="Ask about your spending..."></textarea>
+                <button type="submit" class="chat-send">Send</button>
+            </div>
         </form>
     </div>
 </aside>

@@ -419,3 +419,158 @@
         });
     }
 })();
+
+(function () {
+    var trigger = document.querySelector(".dashboard-search-button");
+    var root = document.getElementById("command-palette");
+    if (!trigger || !root) {
+        return;
+    }
+
+    var panel = root.querySelector(".command-palette-panel");
+    var input = document.getElementById("command-palette-input");
+    var listEl = document.getElementById("command-palette-list");
+    var emptyEl = document.getElementById("command-palette-empty");
+    var rows = Array.prototype.slice.call(listEl.querySelectorAll(".command-row"));
+    var selectedIndex = 0;
+
+    function visibleRows() {
+        return rows.filter(function (row) { return !row.hidden; });
+    }
+
+    function highlight() {
+        var visible = visibleRows();
+        rows.forEach(function (row) { row.classList.remove("command-row-selected"); });
+        if (visible.length) {
+            selectedIndex = Math.max(0, Math.min(selectedIndex, visible.length - 1));
+            visible[selectedIndex].classList.add("command-row-selected");
+        }
+    }
+
+    function filterRows() {
+        var q = input.value.trim().toLowerCase();
+        var anyVisible = false;
+        rows.forEach(function (row) {
+            var label = row.querySelector(".command-row-label").textContent.toLowerCase();
+            var matches = label.indexOf(q) !== -1;
+            row.hidden = !matches;
+            if (matches) {
+                anyVisible = true;
+            }
+        });
+        emptyEl.hidden = anyVisible;
+        selectedIndex = 0;
+        highlight();
+    }
+
+    function openPalette() {
+        root.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+        input.value = "";
+        filterRows();
+        input.focus();
+    }
+
+    function closePalette() {
+        root.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+    }
+
+    trigger.addEventListener("click", function (event) {
+        event.stopPropagation();
+        if (root.hidden) {
+            openPalette();
+        } else {
+            closePalette();
+        }
+    });
+
+    panel.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener("click", function () {
+        if (!root.hidden) {
+            closePalette();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        var isMeta = event.metaKey || event.ctrlKey;
+        if (isMeta && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            if (root.hidden) {
+                openPalette();
+            } else {
+                closePalette();
+            }
+            return;
+        }
+        if (root.hidden) {
+            return;
+        }
+        if (event.key === "Escape") {
+            closePalette();
+        } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            selectedIndex += 1;
+            highlight();
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            selectedIndex -= 1;
+            highlight();
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            var row = visibleRows()[selectedIndex];
+            if (row) {
+                closePalette();
+                row.click();
+            }
+        }
+    });
+
+    input.addEventListener("input", filterRows);
+
+    rows.forEach(function (row) {
+        row.addEventListener("mouseenter", function () {
+            selectedIndex = visibleRows().indexOf(row);
+            highlight();
+        });
+    });
+
+    var actionHandlers = {
+        "add-expense": function () {
+            var el = document.getElementById("profile-add-expense-toggle");
+            if (el) {
+                el.click();
+            }
+        },
+        "scan-receipt": function () {
+            var el = document.getElementById("profile-chat-quickstart-attach-button");
+            if (el) {
+                el.click();
+            }
+        },
+        "ask-assistant": function () {
+            var el = document.getElementById("profile-chat-quickstart-input");
+            if (el) {
+                el.focus();
+            }
+        },
+        "toggle-theme": function () {
+            var el = document.getElementById("theme-toggle");
+            if (el) {
+                el.click();
+            }
+        }
+    };
+
+    rows.forEach(function (row) {
+        var action = row.getAttribute("data-command");
+        if (action && actionHandlers[action]) {
+            row.addEventListener("click", function () {
+                actionHandlers[action]();
+            });
+        }
+    });
+})();
